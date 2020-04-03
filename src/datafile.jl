@@ -21,7 +21,7 @@ function DataFile(filename::String)
         T = Val{:CV}
     elseif occursin("C&D", filename)
         namemap = Dict("WE(1).Potential (V)"=>"Potential (V)",
-                       "Time (s)"=>"Other Time(s)",
+                       "Time (s)"=>"Other Time (s)",
                        "Corrected time (s)"=>"Time (s)")
         units = [""]
         legend_units = "A"
