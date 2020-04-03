@@ -35,7 +35,7 @@ function header(df, delim)
         end
     end
 
-    return buffer * '\n'
+    return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
 function clear(dir, to_delete)

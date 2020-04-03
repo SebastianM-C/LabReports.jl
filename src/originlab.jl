@@ -41,7 +41,8 @@ end
 
 function write_file(datafile, df, delim)
     buffer = IOBuffer()
-    df |> CSV.write(buffer, delim=delim, writeheader=false)
+    nl = @static Sys.iswindows() ? "\r\n" : '\n'
+    df |> CSV.write(buffer, delim=delim, writeheader=false, newline=nl)
 
     h = header(df, delim)
     file = String(take!(buffer))
@@ -49,7 +50,7 @@ function write_file(datafile, df, delim)
     ncols = count(string(delim), h)
     info = comment_value(datafile)
     new_line = repeat(info * delim, ncols)
-    new_line *= info * '\n'
+    new_line *= info * nl
     h *= new_line
 
     open(datafile.savename, "w") do f
