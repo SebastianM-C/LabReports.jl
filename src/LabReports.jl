@@ -3,7 +3,6 @@ module LabReports
 using CSV
 using Unitful
 using DataFrames
-using OffsetArrays
 
 export find_files, process_data, clear, OriginLab
 

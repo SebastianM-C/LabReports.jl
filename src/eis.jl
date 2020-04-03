@@ -1,6 +1,7 @@
 value_index(datafile::DataFile{Val{:EIS}}, filename) = !occursin(prefix, filename) ? 1 : 2
 
-function process_data(::Val{:EIS}, data, (op, col, val))
+function process_data(::Val{:EIS}, data; select)
+    col, op, val = select
     for f in data["EIS"]
         df = read_file(f)
         c = getproperty(df, col)

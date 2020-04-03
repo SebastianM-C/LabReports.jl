@@ -22,7 +22,7 @@ function find_files(folder, types = ["CV", "C&D", "EIS"])
     return data
 end
 
-process_data(type::String, data, args...) = process_data(Val(Symbol(type)), data, args...)
+process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data; args...)
 
 function header(df, delim)
     buffer = ""

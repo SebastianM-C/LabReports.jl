@@ -1,4 +1,5 @@
-function process_data(::Val{:CV}, data, (op, col, val))
+function process_data(::Val{:CV}, data; select)
+    col, op, val = select
     for f in data["CV"]
         df = read_file(f)
         c = getproperty(df, col)
