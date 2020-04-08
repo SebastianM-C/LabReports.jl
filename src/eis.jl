@@ -1,4 +1,6 @@
-value_index(datafile::DataFile{Val{:EIS}}, filename) = !occursin(prefix, filename) ? 1 : 2
+function DataFrames.rename!(df, ::DataFile{Val{:EIS}}) end
+
+value_index(datafile::DataFile{Val{:EIS}}) = 1
 
 function process_data(::Val{:EIS}, data; select)
     col, op, val = select

@@ -1,2 +1,2 @@
 test/reference_data/**          -text
-test/reference_data/**/filtered* text
+test/reference_data/**/*.dat     text
