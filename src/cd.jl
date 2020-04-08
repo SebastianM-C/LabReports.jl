@@ -1,5 +1,17 @@
+function DataFrames.rename!(df, ::DataFile{Val{Symbol("C&D")}})
+    namemap = Dict("WE(1).Potential (V)"=>"Potential (V)",
+                   "Time (s)"=>"Other Time (s)",
+                   "Corrected time (s)"=>"Time (s)")
+    rename!(df, namemap)
+end
+
 function find_pair(val, list, ending)
     findfirst(f->filevalue(f)==val && endswith(f.filename, ending), list)
+end
+
+function add_CD(filename)
+    parts = rsplit(filename, '.', limit=2)
+    parts[1][1:end-1] * "CD." * parts[2]
 end
 
 function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
@@ -31,9 +43,9 @@ function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
             df_C, df_D = endswith(f.filename, "_C") ? (df, df_pair) : (df_pair, df)
             df_CD, df_D = postprocess(f, df_C, df_D, insert_D, continue_col)
 
-            new_name = f.savename[1:end-1] * "CD"
-            mergedf = DataFile{Val{Symbol("C&D")}}(f.filename, new_name, f.namemap,
-                f.units, f.legend_units, f.idx)
+            new_name = add_CD(f.savename)
+            mergedf = DataFile{Val{Symbol("C&D")}}(f.filename, new_name, f.units,
+                f.legend_units, f.idx)
 
             write_file(mergedf, df_CD, ';')
             write_file(endswith(f.filename, "_D") ? f : f_pair, df_D, ';')

@@ -1,11 +1,11 @@
-const prefix = "filtered_"
-
 function read_file(datafile)
     df = CSV.read(datafile.filename, delim=';', copycols=true)
-    rename!(df, datafile.namemap)
+    rename!(df, datafile)
+
+    return df
 end
 
-exclude(f) = occursin(prefix, f) || endswith(f, ".opj")
+exclude(f, ext) = occursin(ext, f) || endswith(f, ".opj")
 
 function to_origin(str)
     new_string = ""
@@ -20,13 +20,13 @@ function to_origin(str)
     return new_string
 end
 
-value_index(datafile, filename) = !occursin(prefix, filename) ? 3 : 4
+value_index(datafile) = 3
 
 function filevalue(datafile)
     filename = datafile.filename
     fn = basename(filename)
     parts = split(fn, '_')
-    idx = value_index(datafile, filename)
+    idx = value_index(datafile)
     replace(parts[idx], " "=>"")
 end
 

@@ -15,7 +15,6 @@ using Test
         for (datafile, ref) in zip(data[k], reference_data[k])
             @test basename(datafile.filename) == basename(ref.filename)
             @test basename(datafile.savename) == basename(ref.savename)
-            @test datafile.namemap == ref.namemap
             @test datafile.units == ref.units
             @test datafile.legend_units == ref.legend_units
             @test datafile.idx == ref.idx
