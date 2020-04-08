@@ -39,6 +39,6 @@ using Test
     end
 
     # Cleanup
-    clear(folder, r"filtered.*")
+    clear(folder, r".*\.dat")
     mv(renamed, to_rename)
 end
