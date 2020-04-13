@@ -24,6 +24,16 @@ end
 
 process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data; args...)
 
+value_index(datafile) = 3
+
+function filevalue(datafile)
+    filename = datafile.filename
+    fn = basename(filename)
+    parts = split(fn, '_')
+    idx = value_index(datafile)
+    replace(parts[idx], " "=>"")
+end
+
 function header(df, delim)
     buffer = ""
     col_names = names(df)

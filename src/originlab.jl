@@ -1,13 +1,6 @@
-function read_file(datafile)
-    df = CSV.read(datafile.filename, delim=';', copycols=true)
-    rename!(df, datafile)
-
-    return df
-end
-
 exclude(f, ext) = occursin(ext, f) || endswith(f, ".opj")
 
-function to_origin(str)
+function replace_unicode(str)
     new_string = ""
     for letter in str
         if !isascii(letter)
@@ -20,14 +13,20 @@ function to_origin(str)
     return new_string
 end
 
-value_index(datafile) = 3
+function replace_powers(str)
+    inv_one = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-1"
+    inv_rex = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-(?<power>[2-9]+)"
+    power_only_unit = r"(?<unit>[a-zA-Z]+)\^(?<power>[1-9]+)"
+    str = replace(str, inv_one=>s"\g<pre>/\g<unit>")
+    str = replace(str, inv_rex=>s"\g<pre>/\g<unit>\g<power>")
+    str = replace(str, powpower_only_unit => s"\g<unit>\\+(\g<power>)")
 
-function filevalue(datafile)
-    filename = datafile.filename
-    fn = basename(filename)
-    parts = split(fn, '_')
-    idx = value_index(datafile)
-    replace(parts[idx], " "=>"")
+    return str
+end
+
+function to_origin(str)
+    str = replace_unicode(str)
+    replace_powers(str)
 end
 
 function comment_value(datafile)
@@ -37,24 +36,4 @@ function comment_value(datafile)
     value = filevalue(datafile)
     unicode_val = si_round(uparse(value*u), idx)
     return to_origin(unicode_val)
-end
-
-function write_file(datafile, df, delim)
-    buffer = IOBuffer()
-    nl = @static Sys.iswindows() ? "\r\n" : '\n'
-    df |> CSV.write(buffer, delim=delim, writeheader=false, newline=nl)
-
-    h = header(df, delim)
-    file = String(take!(buffer))
-
-    ncols = count(string(delim), h)
-    info = comment_value(datafile)
-    new_line = repeat(info * delim, ncols)
-    new_line *= info * nl
-    h *= new_line
-
-    open(datafile.savename, "w") do f
-        write(f, h, file)
-    end
-    return nothing
 end
