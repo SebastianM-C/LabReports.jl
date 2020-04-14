@@ -21,6 +21,8 @@ using Test
         end
     end
 
+    include("originlab.jl")
+
     process_data("CV", data, select=(:Scan, ==, 2))
 
     process_data("EIS", data, select=(Symbol("-Phase (°)"), >, 0))

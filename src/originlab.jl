@@ -15,18 +15,18 @@ end
 
 function replace_powers(str)
     inv_one = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-1"
-    inv_rex = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-(?<power>[2-9]+)"
-    power_only_unit = r"(?<unit>[a-zA-Z]+)\^(?<power>[1-9]+)"
+    inv_pre = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-(?<power>[2-9]+)"
+    power_only_unit = r"(?<unit>[a-zA-Z]+)\^(?<power>-?[1-9]+)"
     str = replace(str, inv_one=>s"\g<pre>/\g<unit>")
-    str = replace(str, inv_rex=>s"\g<pre>/\g<unit>\g<power>")
-    str = replace(str, powpower_only_unit => s"\g<unit>\\+(\g<power>)")
+    str = replace(str, inv_pre=>s"\g<pre>/\g<unit>\\+(\g<power>)")
+    str = replace(str, power_only_unit => s"\g<unit>\\+(\g<power>)")
 
     return str
 end
 
 function to_origin(str)
-    str = replace_unicode(str)
-    replace_powers(str)
+    str = replace_powers(str)
+    replace_unicode(str)
 end
 
 function comment_value(datafile)
