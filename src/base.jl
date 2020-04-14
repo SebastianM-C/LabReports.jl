@@ -1,4 +1,4 @@
-function find_files(folder, types = ["CV", "C&D", "EIS"], ext=".dat")
+function find_files(folder, types = ["CV", "C&D", "EIS"], delim=';', ext=".dat")
     contents = readdir(folder, join=true)
     dirs = contents[isdir.(contents)]
     data = Dict{String,Vector{DataFile}}()
@@ -10,9 +10,9 @@ function find_files(folder, types = ["CV", "C&D", "EIS"], ext=".dat")
             for type in types
                 if occursin(type, file) && !exclude(file, ext)
                     if haskey(data, type)
-                        push!(data[type], DataFile(file, ext))
+                        push!(data[type], DataFile(file, ext, delim))
                     else
-                        push!(data, type=>[DataFile(file, ext)])
+                        push!(data, type=>[DataFile(file, ext, delim)])
                     end
                 end
             end
@@ -32,20 +32,6 @@ function filevalue(datafile)
     parts = split(fn, '_')
     idx = value_index(datafile)
     replace(parts[idx], " "=>"")
-end
-
-function header(df, delim)
-    buffer = ""
-    col_names = names(df)
-    sz = length(col_names)
-    for (i, n) in enumerate(col_names)
-        buffer *= string(n)
-        if i < sz
-            buffer *= delim
-        end
-    end
-
-    return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
 function clear(dir, to_delete)

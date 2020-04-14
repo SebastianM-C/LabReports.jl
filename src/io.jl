@@ -1,8 +1,22 @@
-function read_file(datafile)
-    df = CSV.read(datafile.filename, delim=';', copycols=true)
+function read_file(datafile, name=:filename, delim=';', datarow=2)
+    df = CSV.read(datafile.filename, delim=delim, datarow=datarow, copycols=true)
     rename!(df, datafile)
 
     return df
+end
+
+function header(df, delim)
+    buffer = ""
+    col_names = names(df)
+    sz = length(col_names)
+    for (i, n) in enumerate(col_names)
+        buffer *= string(n)
+        if i < sz
+            buffer *= delim
+        end
+    end
+
+    return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
 function write_file(datafile, df, delim)
@@ -15,6 +29,7 @@ function write_file(datafile, df, delim)
 
     ncols = count(string(delim), h)
     info = comment_value(datafile)
+    units = join(datafile.units, delim)
     new_line = repeat(info * delim, ncols)
     new_line *= info * nl
     h *= new_line
