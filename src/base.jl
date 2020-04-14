@@ -22,6 +22,46 @@ function find_files(folder, types = ["CV", "C&D", "EIS"], delim=';', ext=".dat")
     return data
 end
 
+function files_with_val(datafiles, val)
+    files = DataFile[]
+    for file in datafiles
+        if filevalue(file) == val
+            push!(files, file)
+        end
+    end
+
+    return files
+end
+
+foldervalue(datafile) = split(basename(datafile.filename), '_')[1]
+
+function filevalues(datafiles)
+    vals = Dict{String,Set{String}}()
+    for file in datafiles
+        fdv = foldervalue(file)
+        fv = filevalue(file)
+        if haskey(vals, fdv)
+            push!(vals[fdv], fv)
+        else
+            push!(vals, fdv=>Set{String}([fv]))
+        end
+    end
+
+    return vals
+end
+
+function common_values(data)
+    fvs = filevalues(data)
+
+    common = collect(fvs[first(keys(fvs))])
+
+    for (k,v) in fvs
+        intersect!(common, v)
+    end
+
+    return common
+end
+
 process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data; args...)
 
 value_index(datafile) = 3

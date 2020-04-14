@@ -4,7 +4,7 @@ using CSV
 using Unitful
 using DataFrames
 
-export find_files, process_data, clear, OriginLab
+export find_files, filevalues, files_with_val, common_values, process_data, clear, OriginLab
 
 include("base.jl")
 include("io.jl")
