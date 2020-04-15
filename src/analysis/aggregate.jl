@@ -12,7 +12,8 @@ function series_with_common_value(folder, type, kind; read_processed=false, find
     files = files_with_val(data[type], minval)
 
     sort!(files, lt=(a,b)->parse(Int,foldervalue(a)) < parse(Int,foldervalue(b)))
-    df = DataFrame[]
+    dfs = DataFrame[]
+    selected_files = Vector{eltype(files)}()
 
     for file in files
         if occursin(kind, file.filename)
@@ -22,8 +23,9 @@ function series_with_common_value(folder, type, kind; read_processed=false, find
                 df = LabReports.read_file(file)
             end
             push!(dfs, df)
+            push!(selected_files, file)
         end
     end
 
-    return dfs
+    return dfs, selected_files
 end
