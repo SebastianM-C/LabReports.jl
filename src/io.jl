@@ -39,3 +39,8 @@ function write_file(datafile, df, delim)
     end
     return nothing
 end
+
+function write_capacitances(capacitances)
+    filename = "capacitances.csv"
+    capacitances |> CSV.write(filename)
+end
