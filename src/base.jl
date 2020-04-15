@@ -33,7 +33,7 @@ function files_with_val(datafiles, val)
     return files
 end
 
-foldervalue(datafile) = split(basename(datafile.filename), '_')[1]
+foldervalue(datafile) = splitpath(datafile.filename)[2]
 
 function filevalues(datafiles)
     vals = Dict{String,Set{String}}()

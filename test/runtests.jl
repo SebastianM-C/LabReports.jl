@@ -31,6 +31,7 @@ using Test
 
     for ((root,dirs,files),(ref_root,ref_dirs,ref_files)) in zip(walkdir(folder), walkdir(reference_folder))
         @test dirs == ref_dirs
+        @test length(files) == length(ref_files)
         @test files == ref_files
         @testset "File comparison for $file" for (file, ref_file) in zip(files, ref_files)
             f = read(joinpath(root, file), String)
