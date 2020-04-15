@@ -6,8 +6,8 @@ struct DataFile{T}
     idx::Int
 end
 
-function DataFile(filename::String, ext, delim)
-    filename = preprocess(filename)
+function DataFile(filename::String, ext, delim, rename=true)
+    filename = preprocess(filename, rename)
     savename = joinpath(dirname(filename), basename(filename) * ext)
     units = extract_units(filename, delim)
 
@@ -30,7 +30,8 @@ function DataFile(filename::String, ext, delim)
     DataFile{T}(filename, savename, units, legend_units, idx)
 end
 
-function preprocess(filename)
+function preprocess(filename, rename)
+    !rename && return filename
     if occursin("C&D", filename)
         if !endswith(filename, "_C") && !endswith(filename, "_D")
             new_filename = filename * "_D"

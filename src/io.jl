@@ -1,6 +1,6 @@
-function read_file(datafile, name=:filename, delim=';', datarow=2)
+function read_file(datafile, datarow=2, rename=true, delim=';')
     df = CSV.read(datafile.filename, delim=delim, datarow=datarow, copycols=true)
-    rename!(df, datafile)
+    rename && rename!(df, datafile)
 
     return df
 end

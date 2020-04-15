@@ -1,4 +1,6 @@
-function find_files(folder, types = ["CV", "C&D", "EIS"], delim=';', ext=".dat")
+function find_files(folder, ext=".dat", delim=';', types = ["CV", "C&D", "EIS"];
+        exclude_with=ext, select_with="", rename=true)
+
     contents = readdir(folder, join=true)
     dirs = contents[isdir.(contents)]
     data = Dict{String,Vector{DataFile}}()
@@ -8,11 +10,11 @@ function find_files(folder, types = ["CV", "C&D", "EIS"], delim=';', ext=".dat")
 
         for file in files
             for type in types
-                if occursin(type, file) && !exclude(file, ext)
+                if occursin(type, file) && occursin(select_with, file) && !exclude(file, exclude_with)
                     if haskey(data, type)
-                        push!(data[type], DataFile(file, ext, delim))
+                        push!(data[type], DataFile(file, ext, delim, rename))
                     else
-                        push!(data, type=>[DataFile(file, ext, delim)])
+                        push!(data, type=>[DataFile(file, ext, delim, rename)])
                     end
                 end
             end
