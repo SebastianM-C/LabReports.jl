@@ -19,27 +19,31 @@ function header(df, delim)
     return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
-function write_file(datafile, df, delim)
+function write_file(datafile::DataFile, df, delim)
+    ncols = length(eachcol(df))
+    info = comment_value(datafile)
+    units = join(datafile.units, delim)
+    new_line = repeat(info * delim, ncols)
+    new_line *= info
+
+    write_file(df, new_line, datafile.savename, delim)
+end
+
+function write_file(df::AbstractDataFrame, extra, filename, delim)
     buffer = IOBuffer()
     nl = @static Sys.iswindows() ? "\r\n" : '\n'
     df |> CSV.write(buffer, delim=delim, writeheader=false, newline=nl)
 
     h = header(df, delim)
     file = String(take!(buffer))
+    if extra isa Tuple
+        content = h * join(extra, nl) * nl
+    else
+        content = h * extra * nl
+    end
 
-    ncols = count(string(delim), h)
-    info = comment_value(datafile)
-    units = join(datafile.units, delim)
-    new_line = repeat(info * delim, ncols)
-    new_line *= info * nl
-    h *= new_line
-
-    open(datafile.savename, "w") do f
-        write(f, h, file)
+    open(filename, "w") do f
+        write(f, content, file)
     end
     return nothing
-end
-
-function write_capacitances(capacitances, fn="capacitances.csv")
-    capacitances |> CSV.write(fn)
 end

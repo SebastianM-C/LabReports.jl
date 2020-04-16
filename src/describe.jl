@@ -76,6 +76,19 @@ function filevalue(datafile)
     replace(parts[idx], " "=>"")
 end
 
+function groupbyfolder(datafiles)
+    data = Dict{String,Vector{DataFile}}()
+    for df in datafiles
+        f = foldervalue(df)
+        if haskey(data, f)
+            push!(data[f], df)
+        else
+            data[f] = [df]
+        end
+    end
+    return data
+end
+
 function clear(dir, to_delete)
     for (root,dirs,files) in walkdir(dir)
         for file in files

@@ -19,8 +19,6 @@ end
 
 function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
     done = Vector{Int}()
-    capacitances = DataFrame(:Porosity=>String[],:I=>Float64[], :C=>Float64[])
-    dynamic_capacitances = DataFrame(:Porosity=>String[],:I=>Float64[], :V=>Float64[], :C=>Float64[])
     for (i,f) in enumerate(data["C&D"])
         if i in done
             continue
@@ -34,8 +32,6 @@ function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
 
             if isnothing(pair_idx)
                 if endswith(f.filename, "_D")
-                    add_capacitance!(capacitances, f, df)
-                    add_dyn_capacitance!(dynamic_capacitances, f, df)
                     pushfirst(df, insert_D)
                     write_file(f, df, ';')
                 end
@@ -47,8 +43,6 @@ function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
 
             df_pair = read_file(f_pair)
             df_C, df_D = endswith(f.filename, "_C") ? (df, df_pair) : (df_pair, df)
-            add_capacitance!(capacitances, f, df_D)
-            add_dyn_capacitance!(dynamic_capacitances, f, df_D)
             df_CD, df_D = postprocess(f, df_C, df_D, insert_D, continue_col)
 
             new_name = add_CD(f.savename)
@@ -59,8 +53,6 @@ function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
             write_file(endswith(f.filename, "_D") ? f : f_pair, df_D, ';')
         end
     end
-    write_capacitances(capacitances)
-    write_capacitances(dynamic_capacitances, "dynamic_capacitances.csv")
 
     return nothing
 end
