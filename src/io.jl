@@ -23,8 +23,7 @@ function write_file(datafile::DataFile, df, delim)
     ncols = length(eachcol(df))
     info = comment_value(datafile)
     units = join(datafile.units, delim)
-    new_line = repeat(info * delim, ncols)
-    new_line *= info
+    new_line = join(repeat([info], ncols), delim)
 
     write_file(df, new_line, datafile.savename, delim)
 end
