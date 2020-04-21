@@ -9,10 +9,10 @@ using Interpolations
 export find_files, filevalues, foldervalue, files_with_val, common_values,
     process_data, clear, OriginLab, series_with_common_value, compute_capacitances
 
+include("datafile.jl")
 include("io.jl")
 include("describe.jl")
 include("unit_format.jl")
-include("datafile.jl")
 include("originlab.jl")
 # File types
 include("filetypes/cv.jl")

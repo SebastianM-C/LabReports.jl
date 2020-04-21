@@ -6,15 +6,7 @@ function read_file(datafile, datarow=2, rename=true, delim=';')
 end
 
 function header(df, delim)
-    buffer = ""
-    col_names = names(df)
-    sz = length(col_names)
-    for (i, n) in enumerate(col_names)
-        buffer *= string(n)
-        if i < sz
-            buffer *= delim
-        end
-    end
+    buffer = join(names(df), delim)
 
     return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
