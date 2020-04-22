@@ -53,6 +53,7 @@ function add_capacitance!(Cs, datafile, df, folder)
     P_specific = power(E_specific, Δt)
 
     push!(Cs[!, :Area], ustrip(u"V*s", ∫Vdt))
+    push!(Cs[!, :Δt], ustrip(u"s", Δt))
     push!(Cs[!, :I], ustrip(u"mA", I))
     push!(Cs[!, :C], ustrip(u"μF", C))
     push!(Cs[!, :C_specific], ustrip(u"F/g", C_specific))
@@ -76,12 +77,13 @@ end
 
 function compute_capacitances(data, folder)
     grouped = groupbyfolder(data["C&D"])
-    c_units = join(["V s","mA", replace_unicode("μF"), "F/g", "W*h", "Wh/kg", "W", "W/kg"], ',')
+    c_units = join(["V s", "s", "mA", replace_unicode("μF"), "F/g", "W*h", "Wh/kg", "W", "W/kg"], ',')
     dc_units = join(["-","V","mA", replace_unicode("μF")], ',')
 
     for (f, datafiles) in grouped
         capacitances = DataFrame(
             :Area=>Float64[],
+            :Δt=>Float64[],
             :I=>Float64[],
             :C=>Float64[],
             :C_specific=>Float64[],
@@ -107,7 +109,8 @@ function compute_capacitances(data, folder)
             "E_specific"=>"Energy density",
             "P_specific"=>"Power density",
             "C"=>"C_abs",
-            "C_specific"=>"C"))
+            "C_specific"=>"C",
+            "Δt"=>replace_unicode("Δt")))
         sort!(capacitances, :I)
         sort!(dynamic_capacitances, :V)
 
