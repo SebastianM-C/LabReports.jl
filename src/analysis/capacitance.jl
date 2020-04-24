@@ -13,7 +13,7 @@ end
 
 function specific_capacitance(C, porosity, folder)
     A = 71u"cm^2"
-    a = (1.2*1.8)u"cm^2"
+    a = 0.5u"cm^2"
 
     df = CSV.read("$folder/weights.csv")
     mass = (df[!,:after].*u"g" .- df[!,:before].*u"g") .* a ./ A .|> u"μg"
