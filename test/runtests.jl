@@ -42,6 +42,12 @@ using Test
         end
     end
 
+    @test filevalue(data["CV"][2]) == "14000"
+    @test files_with_val(data, "14000") == [data["CV"][2]]
+
+    vals = Dict("15"=>Set(["2e-3","8.9e-5"]), "200"=>Set(["3.4e-3","8.9e-5","7.4e-2"]))
+    @test filevalues(data["C&D"]) == vals
+
     # Cleanup
     clear(folder, r".*\.dat")
     mv(renamed, to_rename)
