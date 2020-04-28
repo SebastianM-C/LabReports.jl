@@ -14,7 +14,6 @@ function replace_unicode(str)
 end
 
 function replace_powers(str)
-    @show str
     inv_one = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-1"
     inv_pre = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-(?<power>[2-9]+)"
     power_only_unit = r"(?<unit>[a-zA-Z]+)\^(?<power>-?[1-9]+)"
@@ -36,5 +35,6 @@ function comment_value(datafile)
 
     value = filevalue(datafile)
     unicode_val = si_round(uparse(value*u), idx)
+    @show unicode_val uparse("1mV/s") u"1mV/s"
     return to_origin(unicode_val)
 end
