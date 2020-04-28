@@ -21,6 +21,10 @@ using Test
         end
     end
 
+    include("originlab.jl")
+
+    ENV["UNITFUL_FANCY_EXPONENTS"] = false
+
     process_data("CV", data, select=(:Scan, ==, 2))
 
     process_data("EIS", data, select=(Symbol("-Phase (°)"), >, 0))
@@ -29,6 +33,7 @@ using Test
 
     for ((root,dirs,files),(ref_root,ref_dirs,ref_files)) in zip(walkdir(folder), walkdir(reference_folder))
         @test dirs == ref_dirs
+        @test length(files) == length(ref_files)
         @test files == ref_files
         @testset "File comparison for $file" for (file, ref_file) in zip(files, ref_files)
             f = read(joinpath(root, file), String)
@@ -36,6 +41,12 @@ using Test
             @test f == r
         end
     end
+
+    @test filevalue(data["CV"][2]) == "14000"
+    @test files_with_val(data, "14000") == [data["CV"][2]]
+
+    vals = Dict("15"=>Set(["2e-3","8.9e-5"]), "200"=>Set(["3.4e-3","8.9e-5","7.4e-2"]))
+    @test filevalues(data["C&D"]) == vals
 
     # Cleanup
     clear(folder, r".*\.dat")

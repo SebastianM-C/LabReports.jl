@@ -5,8 +5,11 @@ function DataFrames.rename!(df, ::DataFile{Val{Symbol("C&D")}})
     rename!(df, namemap)
 end
 
-function find_pair(val, list, ending)
-    findfirst(f->filevalue(f)==val && endswith(f.filename, ending), list)
+function find_pair(datafile, list, ending)
+    findfirst(f -> filevalue(f) == filevalue(datafile) &&
+                   foldervalue(f) == foldervalue(datafile) &&
+                   endswith(f.filename, ending),
+              list)
 end
 
 function add_CD(filename)
@@ -22,11 +25,10 @@ function process_data(::Val{Symbol("C&D")}, data; insert_D, continue_col)
         else
             push!(done, i)
 
-            val = filevalue(f)
             df = read_file(f)
 
             valid_idx = setdiff(axes(data["C&D"], 1), done)
-            pair_idx = find_pair(val, data["C&D"], endswith(f.filename, "_C") ? "_D" : "_C")
+            pair_idx = find_pair(f, data["C&D"], endswith(f.filename, "_C") ? "_D" : "_C")
 
             if isnothing(pair_idx)
                 if endswith(f.filename, "_D")

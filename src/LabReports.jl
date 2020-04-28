@@ -3,15 +3,23 @@ module LabReports
 using CSV
 using Unitful
 using DataFrames
+using NumericalIntegration
+using Interpolations
 
-export find_files, process_data, clear, OriginLab
+export find_files, filevalues, foldervalue, files_with_val, common_values,
+    process_data, clear, OriginLab, series_with_common_value, compute_capacitances
 
-include("base.jl")
-include("unit_format.jl")
 include("datafile.jl")
+include("io.jl")
+include("describe.jl")
+include("unit_format.jl")
 include("originlab.jl")
-include("cv.jl")
-include("cd.jl")
-include("eis.jl")
+# File types
+include("filetypes/cv.jl")
+include("filetypes/cd.jl")
+include("filetypes/eis.jl")
+# Analysis
+include("analysis/aggregate.jl")
+include("analysis/capacitance.jl")
 
 end # module

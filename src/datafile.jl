@@ -6,26 +6,23 @@ struct DataFile{T}
     idx::Int
 end
 
-function DataFile(filename::String, ext)
-    filename = preprocess(filename)
+function DataFile(filename::String, ext, delim, rename=true)
+    filename = preprocess(filename, rename)
     savename = joinpath(dirname(filename), basename(filename) * ext)
+    units = extract_units(filename, delim)
 
     idx = 1
     if occursin("CV", filename)
-        units = [""]
         legend_units = "mV/s"
         idx = 2
         T = Val{:CV}
     elseif occursin("C&D", filename)
-        units = [""]
         legend_units = "A"
         T = Val{Symbol("C&D")}
     elseif occursin("EIS", filename)
-        units = [""]
         legend_units = "mA/cm^2"
         T = Val{:EIS}
     else
-        units = [""]
         legend_units = ""
         T = Val{:unknown}
     end
@@ -33,7 +30,8 @@ function DataFile(filename::String, ext)
     DataFile{T}(filename, savename, units, legend_units, idx)
 end
 
-function preprocess(filename)
+function preprocess(filename, rename)
+    !rename && return filename
     if occursin("C&D", filename)
         if !endswith(filename, "_C") && !endswith(filename, "_D")
             new_filename = filename * "_D"
@@ -44,4 +42,19 @@ function preprocess(filename)
     end
 
     return filename
+end
+
+function extract_units(filename, delim)
+    firstline = readline(filename)
+    parts = split(firstline, delim)
+    units = String[]
+
+    for p in parts
+        m = match(r" \((?<unit>\w)\)", p)
+        if !isnothing(m)
+            push!(units, m[:unit])
+        end
+    end
+
+    return units
 end
