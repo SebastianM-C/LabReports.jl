@@ -23,6 +23,8 @@ using Test
 
     include("originlab.jl")
 
+    ENV["UNITFUL_FANCY_EXPONENTS"] = false
+
     process_data("CV", data, select=(:Scan, ==, 2))
 
     process_data("EIS", data, select=(Symbol("-Phase (°)"), >, 0))
