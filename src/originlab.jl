@@ -14,6 +14,7 @@ function replace_unicode(str)
 end
 
 function replace_powers(str)
+    @show str
     inv_one = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-1"
     inv_pre = r"(?<pre>[a-zA-Z]+) (?<unit>[a-zA-Z]+)\^-(?<power>[2-9]+)"
     power_only_unit = r"(?<unit>[a-zA-Z]+)\^(?<power>-?[1-9]+)"
