@@ -42,8 +42,8 @@ using Test
         end
     end
 
-    @test filevalue(data["CV"][2]) == "14000"
-    @test files_with_val(data, "14000") == [data["CV"][2]]
+    @test filevalue(data["CV"][1]) == "14000"
+    @test files_with_val(data["CV"], "14000") == [data["CV"][1]]
 
     vals = Dict("15"=>Set(["2e-3","8.9e-5"]), "200"=>Set(["3.4e-3","8.9e-5","7.4e-2"]))
     @test filevalues(data["C&D"]) == vals
