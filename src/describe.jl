@@ -68,8 +68,8 @@ process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data
 
 value_index(datafile) = 3
 
-function filevalue(datafile)
-    filename = datafile.filename
+function filevalue(datafile, ext="")
+    filename = isempty(ext) ? datafile.filename : replace(datafile.filename, ext=>"")
     fn = basename(filename)
     parts = split(fn, '_')
     idx = value_index(datafile)
