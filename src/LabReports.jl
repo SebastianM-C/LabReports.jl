@@ -6,7 +6,7 @@ using DataFrames
 using NumericalIntegration
 using Interpolations
 
-export find_files, filevalues, foldervalue, files_with_val, common_values,
+export find_files, filevalue, filevalues, foldervalue, files_with_val, common_values,
     process_data, clear, OriginLab, series_with_common_value, compute_capacitances
 
 include("datafile.jl")
