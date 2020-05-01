@@ -77,7 +77,8 @@ function discharge_area(df)
     sgn = V[begin] > V[end] ? -1 : 1
     ∫Idt = sgn * integrate(V, I) * u"V*A"
     Δt = (t[b_idx] - t[a_idx]) * u"s"
-    ΔV = (V[end] - V[begin]) * u"V"
+    # ΔV = (V[end] - V[begin]) * u"V"
+    ΔV = -1.5u"V"
 
     return Δt, ΔV, ∫Idt
 end
