@@ -21,6 +21,9 @@ include("filetypes/cd.jl")
 include("filetypes/eis.jl")
 # Analysis
 include("analysis/aggregate.jl")
+include("analysis/area.jl")
+include("analysis/cd.jl")
+include("analysis/cv.jl")
 include("analysis/capacitance.jl")
 
 end # module
