@@ -45,7 +45,7 @@ function add_aux!(df, cr::CVCapacitanceReport)
 end
 
 function cv_report_units()
-    join(["V A", "", "s", "V", "mA", replace_unicode("μF"), "F/g", "W*h", "Wh/kg", "W", "W/kg"], ',')
+    join(["V A", "", "s", "V", "mV/s", replace_unicode("μF"), "F/g", "W*h", "Wh/kg", "W", "W/kg"], ',')
 end
 
 function cv_result()
