@@ -1,7 +1,8 @@
 using LabReports, Test
 using CSV
 using Unitful
-using LabReports: sign_change, integration_domain, discharge_area, CVCapacitanceReport
+using LabReports: sign_change, integration_domain, discharge_area,
+    CVCapacitanceReport, CDCapacitanceReport
 
 @testset "IO" begin
     df = CSV.read("fake_data/15/15_EIS", delim=';', datarow=2, copycols=true)
@@ -11,7 +12,7 @@ using LabReports: sign_change, integration_domain, discharge_area, CVCapacitance
     @test df == results("fake_data", "CV", "15", "3", processed=true)[2]
 end
 
-@testset "Area" begin
+@testset "CV Area" begin
     df = results("fake_data", "CV", "15", "14000", processed=true)[2]
 
     I = df[!, Symbol("Current (mA)")]
@@ -57,4 +58,18 @@ end
     @test cr.E_specific ≈ 0.0283369355u"W*hr/kg"
     @test cr.P ≈ 0.0007847151416u"W"
     @test cr.P_specific ≈ 784.71514165u"W/kg"
+end
+
+@testset "C&D capacitance" begin
+    only_d(files) = begin
+        for f in files
+            if endswith(f.filename, "_D")
+                return [f]
+            end
+        end
+    end
+    datafile, df = results("fake_data", "C&D", "15", "2e-3", processed=false, reduction=only_d)
+
+    setup = CSetup(a=0.1u"cm^2", A=10.0u"cm^2", fixed_ΔV=1.4u"V")
+    cr = CDCapacitanceReport(datafile, df, "fake_data", setup)
 end
