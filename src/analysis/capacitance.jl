@@ -1,3 +1,9 @@
+@with_kw struct CSetup{S,V}
+    a::S = 0.5u"cm^2"
+    A::S = 71.0u"cm^2"
+    fixed_ΔV::V = nothing
+end
+
 function specific_capacitance(C, porosity, folder, a, A)
     porosities = sort!(parse.(Int, dirs_in_folder(folder, false)))
 
@@ -42,7 +48,7 @@ function add_report!(result_df, datafile, quadrant, folder, setup)
     add_report!(result_df, cr)
 end
 
-function compute_capacitances(folder; cv_setup=nothing, cd_setup=CVSetup())
+function compute_capacitances(folder; cv_setup=CSetup(), cd_setup=CSetup())
     data = find_files(folder)
     processed_data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
 

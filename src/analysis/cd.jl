@@ -23,12 +23,13 @@ function capacitance(df, I, fixed_ΔV)
     return Δt, ΔV, ∫Vdt, 2*I*∫Vdt/ΔV^2
 end
 
-function CDCapacitanceReport(datafile, df, folder, fixed_ΔV)
+function CDCapacitanceReport(datafile, df, folder, setup)
     I = parse(Float64, filevalue(datafile)) * uparse(datafile.legend_units)
     porosity = parse(Int, foldervalue(datafile))
+    @unpack a, A, fixed_ΔV = setup
 
     Δt, ΔV, area, C = capacitance(df, I, fixed_ΔV)
-    C_specific = specific_capacitance(C, porosity, folder)
+    C_specific = specific_capacitance(C, porosity, folder, a, A)
     E = energy(C, ΔV)
     E_specific = energy(C_specific, ΔV)
     P = power(E, Δt)

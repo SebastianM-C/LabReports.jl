@@ -49,7 +49,7 @@ end
 @testset "CV capacitance" begin
     datafile, df = results("fake_data", "CV", "15", "14000", processed=true)
 
-    setup = CVSetup(a=0.1u"cm^2", A=10.0u"cm^2")
+    setup = CSetup(a=0.1u"cm^2", A=10.0u"cm^2", fixed_ΔV=1.5u"V")
     cr = CVCapacitanceReport(datafile, df, 4, "fake_data", setup)
     @test cr.C ≈ 90.67819391u"μF"
     @test cr.C_specific ≈ 90678.19391788u"μF/g"
