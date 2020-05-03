@@ -94,7 +94,7 @@ function groupbyfolder(datafiles)
     return data
 end
 
-function results(folder, type, parameter_val, file_val; processed=true)
+function results(folder, type, parameter_val, file_val; processed=true, reduction=identity)
     if processed
         data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
         ext = ".dat"
@@ -104,7 +104,8 @@ function results(folder, type, parameter_val, file_val; processed=true)
     end
 
     grouped = groupbyfolder(data[type])
-    datafile = only(files_with_val(grouped[parameter_val], file_val, ext))
+    files = files_with_val(grouped[parameter_val], file_val, ext)
+    datafile = only(reduction(files))
 
     if processed
         df = read_file(datafile, 3, false)
