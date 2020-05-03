@@ -6,9 +6,11 @@ using DataFrames
 using NumericalIntegration
 using Interpolations
 using OffsetArrays
+using Parameters
 
 export find_files, filevalue, filevalues, foldervalue, files_with_val, common_values,
-    process_data, clear, OriginLab, series_with_common_value, compute_capacitances
+    process_data, clear, OriginLab, results, series_with_common_value,
+    compute_capacitances, CVSetup
 
 include("datafile.jl")
 include("io.jl")

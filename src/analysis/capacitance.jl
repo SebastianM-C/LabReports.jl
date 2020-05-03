@@ -1,11 +1,11 @@
-function specific_capacitance(C, porosity, folder)
-    A = 71u"cm^2"
-    a = 0.5u"cm^2"
+function specific_capacitance(C, porosity, folder, a, A)
+    porosities = sort!(parse.(Int, dirs_in_folder(folder, false)))
 
     df = CSV.read("$folder/weights.csv")
     mass = (df[!,:after].*u"g" .- df[!,:before].*u"g") .* a ./ A .|> u"μg"
-    mass_dict = Dict([10,30,50,70,90,110].=>mass[1:6])
+    mass_dict = Dict(porosities.=>mass[1:length(porosities)])
 
+    # @show mass_dict
     C / mass_dict[porosity]
 end
 
@@ -28,21 +28,21 @@ function add_report!(df, cr)
     return nothing
 end
 
-function add_report!(result_df, datafile, folder, fixed_ΔV)
+function add_report!(result_df, datafile, folder, setup)
     if endswith(datafile.filename, "_D")
         df = read_file(datafile)
-        cr = CDCapacitanceReport(datafile, df, folder, fixed_ΔV)
+        cr = CDCapacitanceReport(datafile, df, folder, setup)
         add_report!(result_df, cr)
     end
 end
 
-function add_report!(result_df, datafile, quadrant, folder, fixed_ΔV)
+function add_report!(result_df, datafile, quadrant, folder, setup)
     df = read_file(datafile, 3, false)
-    cr = CVCapacitanceReport(datafile, df, quadrant, folder, fixed_ΔV)
+    cr = CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     add_report!(result_df, cr)
 end
 
-function compute_capacitances(folder; cv_ΔV=nothing, cd_ΔV=nothing)
+function compute_capacitances(folder; cv_setup=nothing, cd_setup=CVSetup())
     data = find_files(folder)
     processed_data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
 
@@ -62,12 +62,12 @@ function compute_capacitances(folder; cv_ΔV=nothing, cd_ΔV=nothing)
         cv_report2 = cv_result()
 
         for datafile in cd_datafiles
-            add_report!(cd_report, datafile, folder, cd_ΔV)
+            add_report!(cd_report, datafile, folder, cd_setup)
         end
 
         for datafile in cv_datafiles
-            add_report!(cv_report4, datafile, 4, folder, cv_ΔV)
-            add_report!(cv_report2, datafile, 2, folder, cv_ΔV)
+            add_report!(cv_report4, datafile, 4, folder, cv_setup)
+            add_report!(cv_report2, datafile, 2, folder, cv_setup)
         end
 
         rename_cols!(df) = rename!(df, Dict(

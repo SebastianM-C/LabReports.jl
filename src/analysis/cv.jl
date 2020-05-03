@@ -12,20 +12,27 @@ struct CVCapacitanceReport{U1,U2,U3,U4,U5,U6,U7,U8,U9,U10}
     P_specific::U10
 end
 
-function capacitance(df, scan_rate, quadrant, fixed_ΔV)
-    Δt, ΔV, ∫Idt = discharge_area(df, quadrant, fixed_ΔV)
-
-    C = ∫Idt / (ΔV * scan_rate)
-    return Δt, ΔV, ∫Idt, C
+@with_kw struct CVSetup{S,V}
+    a::S = 0.5u"cm^2"
+    A::S = 71.0u"cm^2"
+    fixed_ΔV::V = 1.5u"V"
 end
 
-function CVCapacitanceReport(datafile, df, quadrant, folder, fixed_ΔV)
+function capacitance(df, scan_rate, quadrant, fixed_ΔV)
+    Δt, ΔV, ∫IdV = discharge_area(df, quadrant, fixed_ΔV)
+
+    C = ∫IdV / (ΔV * scan_rate)
+    return Δt, ΔV, ∫IdV, C
+end
+
+function CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     ext = ".dat"    # using processed data
     scan_rate = parse(Float64, filevalue(datafile, ext)) * uparse(datafile.legend_units)
     porosity = parse(Int, foldervalue(datafile))
+    @unpack a, A, fixed_ΔV = setup
 
     Δt, ΔV, area, C = capacitance(df, scan_rate, quadrant, fixed_ΔV)
-    C_specific = specific_capacitance(C, porosity, folder)
+    C_specific = specific_capacitance(C, porosity, folder, a, A)
     E = energy(C, ΔV)
     E_specific = energy(C_specific, ΔV)
     P = power(E, Δt)
