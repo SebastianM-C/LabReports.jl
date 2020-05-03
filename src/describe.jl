@@ -1,8 +1,7 @@
 function find_files(folder, ext=".dat", delim=';', types = ["CV", "C&D", "EIS"];
         exclude_with=ext, select_with="", rename=true)
 
-    contents = readdir(folder, join=true)
-    dirs = contents[isdir.(contents)]
+    dirs = dirs_in_folder(folder, true)
     data = Dict{String,Vector{DataFile}}()
     for dir in dirs
         files = readdir(dir, join=true)
@@ -24,10 +23,16 @@ function find_files(folder, ext=".dat", delim=';', types = ["CV", "C&D", "EIS"];
     return data
 end
 
-function files_with_val(datafiles, val)
+function dirs_in_folder(folder, keep_root)
+    contents = readdir(folder, join=true)
+    dirs = contents[isdir.(contents)]
+    return keep_root ? dirs : basename.(dirs)
+end
+
+function files_with_val(datafiles, val, ext="")
     files = DataFile[]
     for file in datafiles
-        if filevalue(file) == val
+        if filevalue(file, ext) == val
             push!(files, file)
         end
     end
@@ -68,8 +73,8 @@ process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data
 
 value_index(datafile) = 3
 
-function filevalue(datafile)
-    filename = datafile.filename
+function filevalue(datafile, ext="")
+    filename = isempty(ext) ? datafile.filename : replace(datafile.filename, ext=>"")
     fn = basename(filename)
     parts = split(fn, '_')
     idx = value_index(datafile)
@@ -87,6 +92,27 @@ function groupbyfolder(datafiles)
         end
     end
     return data
+end
+
+function results(folder, type, parameter_val, file_val; processed=true)
+    if processed
+        data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
+        ext = ".dat"
+    else
+        data = find_files(folder)
+        ext = ""
+    end
+
+    grouped = groupbyfolder(data[type])
+    datafile = only(files_with_val(grouped[parameter_val], file_val, ext))
+
+    if processed
+        df = read_file(datafile, 3, false)
+    else
+        df = read_file(datafile)
+    end
+
+    return datafile, df
 end
 
 function clear(dir, to_delete)

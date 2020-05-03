@@ -1,130 +1,105 @@
-function capacitance(df, I)
-    t, V = df[!, Symbol("Time (s)")], df[!, Symbol("Potential (V)")]
-    idxs = findall(v->v > 0, V)
-    t, V = t[idxs], V[idxs]
-
-    ∫Vdt = integrate(t, V) * u"V*s"
-    # ΔV = -(reverse(extrema(V))...)
-    ΔV = 1.4u"V"
-    Δt = (t[end] - t[1]) * u"s"
-
-    return Δt, ∫Vdt, 2*I*∫Vdt/ΔV^2
-end
-
-function specific_capacitance(C, porosity, folder)
-    A = 71u"cm^2"
-    a = 0.5u"cm^2"
+function specific_capacitance(C, porosity, folder, a, A)
+    porosities = sort!(parse.(Int, dirs_in_folder(folder, false)))
 
     df = CSV.read("$folder/weights.csv")
     mass = (df[!,:after].*u"g" .- df[!,:before].*u"g") .* a ./ A .|> u"μg"
-    mass_dict = Dict([10,30,50,70,90,110].=>mass[1:6])
+    mass_dict = Dict(porosities.=>mass[1:length(porosities)])
 
+    # @show mass_dict
     C / mass_dict[porosity]
 end
 
-function energy(C)
-    ΔV = 1.4u"V"
+function energy(C, ΔV)
     return (C*ΔV^2)/2
 end
 
 power(E, Δt) = E / Δt
 
-function dynamic_capacitance(df, I)
-    t, V = df[!, Symbol("Time (s)")], df[!, Symbol("Potential (V)")]
-    idxs = findall(v->v > 0, V)
-    t, V = t[idxs], V[idxs]
+function add_report!(df, cr)
+    add_aux!(df, cr)
 
-    ts = range(extrema(t)..., length=50)
-    itp = LinearInterpolation(t, V)
-
-    tg = only.(Interpolations.gradient.(Ref(itp), ts))
-    C = I ./ tg
-    return itp.(ts), C
-end
-
-function add_capacitance!(Cs, datafile, df, folder)
-    I = parse(Float64, filevalue(datafile)) * u"A"
-    porosity = parse(Int, foldervalue(datafile))
-    Δt, ∫Vdt, C = capacitance(df, I)
-    C_specific = specific_capacitance(C, porosity, folder)
-    E = energy(C)
-    E_specific = energy(C_specific)
-    P = power(E, Δt)
-    P_specific = power(E_specific, Δt)
-
-    push!(Cs[!, :Area], ustrip(u"V*s", ∫Vdt))
-    push!(Cs[!, :Δt], ustrip(u"s", Δt))
-    push!(Cs[!, :I], ustrip(u"mA", I))
-    push!(Cs[!, :C], ustrip(u"μF", C))
-    push!(Cs[!, :C_specific], ustrip(u"F/g", C_specific))
-    push!(Cs[!, :E], ustrip(u"W*hr", E))
-    push!(Cs[!, :E_specific], ustrip(u"W*hr/kg", E_specific))
-    push!(Cs[!, :P], ustrip(u"W", P))
-    push!(Cs[!, :P_specific], ustrip(u"W/kg", P_specific))
+    push!(df[!, :C], ustrip(u"μF", cr.C))
+    push!(df[!, :C_specific], ustrip(u"F/g", cr.C_specific))
+    push!(df[!, :E], ustrip(u"W*hr", cr.E))
+    push!(df[!, :E_specific], ustrip(u"W*hr/kg", cr.E_specific))
+    push!(df[!, :P], ustrip(u"W", cr.P))
+    push!(df[!, :P_specific], ustrip(u"W/kg", cr.P_specific))
 
     return nothing
 end
 
-function add_dyn_capacitance!(dyn_Cs, datafile, df)
-    I = parse(Float64, filevalue(datafile))
-    V, Cs = dynamic_capacitance(df, I)
-
-    append!(dyn_Cs[!, :Porosity], repeat([foldervalue(datafile)], length(V)))
-    append!(dyn_Cs[!, :V], V)
-    append!(dyn_Cs[!, :I], repeat([I], length(V)))
-    append!(dyn_Cs[!, :C], Cs)
+function add_report!(result_df, datafile, folder, setup)
+    if endswith(datafile.filename, "_D")
+        df = read_file(datafile)
+        cr = CDCapacitanceReport(datafile, df, folder, setup)
+        add_report!(result_df, cr)
+    end
 end
 
-function compute_capacitances(data, folder)
+function add_report!(result_df, datafile, quadrant, folder, setup)
+    df = read_file(datafile, 3, false)
+    cr = CVCapacitanceReport(datafile, df, quadrant, folder, setup)
+    add_report!(result_df, cr)
+end
+
+function compute_capacitances(folder; cv_setup=nothing, cd_setup=CVSetup())
+    data = find_files(folder)
+    processed_data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
+
     grouped = groupbyfolder(data["C&D"])
-    c_units = join(["V s", "s", "mA", replace_unicode("μF"), "F/g", "W*h", "Wh/kg", "W", "W/kg"], ',')
-    dc_units = join(["-","V","mA", replace_unicode("μF")], ',')
+    processed_grouped = groupbyfolder(processed_data["CV"])
+    @assert keys(grouped) == keys(processed_grouped)
 
-    for (f, datafiles) in grouped
-        capacitances = DataFrame(
-            :Area=>Float64[],
-            :Δt=>Float64[],
-            :I=>Float64[],
-            :C=>Float64[],
-            :C_specific=>Float64[],
-            :E=>Float64[],
-            :E_specific=>Float64[],
-            :P=>Float64[],
-            :P_specific=>Float64[])
-        dynamic_capacitances = DataFrame(
-            :Porosity=>String[],
-            :V=>Float64[],
-            :I=>Float64[],
-            :C=>Float64[])
+    cd_units = cd_report_units()
+    cv_units = cv_report_units()
 
-        for datafile in datafiles
-            if endswith(datafile.filename, "_D")
-                df = read_file(datafile)
-                add_capacitance!(capacitances, datafile, df, folder)
-                add_dyn_capacitance!(dynamic_capacitances, datafile, df)
-            end
+    for f in keys(grouped)
+        cd_datafiles = grouped[f]
+        cv_datafiles = processed_grouped[f]
+
+        cd_report = cd_result()
+        cv_report4 = cv_result()
+        cv_report2 = cv_result()
+
+        for datafile in cd_datafiles
+            add_report!(cd_report, datafile, folder, cd_setup)
         end
 
-        rename!(capacitances, Dict(
+        for datafile in cv_datafiles
+            add_report!(cv_report4, datafile, 4, folder, cv_setup)
+            add_report!(cv_report2, datafile, 2, folder, cv_setup)
+        end
+
+        rename_cols!(df) = rename!(df, Dict(
             "E_specific"=>"Energy density",
             "P_specific"=>"Power density",
             "C"=>"C_abs",
             "C_specific"=>"C",
-            "Δt"=>replace_unicode("Δt")))
-        sort!(capacitances, :I)
-        sort!(dynamic_capacitances, :V)
+            "Δt"=>replace_unicode("Δt"),
+            "ΔV"=>replace_unicode("ΔV")))
+        rename_cols!(cd_report)
+        rename_cols!(cv_report4)
+        rename_cols!(cv_report2)
+        sort!(cd_report, :I)
+        sort!(cv_report4, :scan_rate)
+        sort!(cv_report2, :scan_rate)
 
-        comment(units) = join(repeat([f*replace_powers(" mA cm^-2")], length(units)), ',')
+        comment(df) = join(repeat([f*replace_powers(" mA cm^-2")], size(df,2)), ',')
 
         write_file(
-            capacitances,
-            (c_units, comment(c_units)),
-            joinpath(folder, f, "capacitances.csv"),
+            cd_report,
+            (cd_units, comment(cd_report)),
+            joinpath(folder, f, "cd_capacitances.csv"),
             ',')
         write_file(
-            dynamic_capacitances,
-            (dc_units, comment(dc_units)),
-            joinpath(folder, f, "dynamic_capacitances.csv"),
+            cv_report4,
+            (cv_units, comment(cv_report4)),
+            joinpath(folder, f, "cv_capacitances4.csv"),
+            ',')
+        write_file(
+            cv_report2,
+            (cv_units, comment(cv_report2)),
+            joinpath(folder, f, "cv_capacitances2.csv"),
             ',')
     end
 
