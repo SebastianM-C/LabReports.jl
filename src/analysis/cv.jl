@@ -12,12 +12,6 @@ struct CVCapacitanceReport{U1,U2,U3,U4,U5,U6,U7,U8,U9,U10}
     P_specific::U10
 end
 
-@with_kw struct CVSetup{S,V}
-    a::S = 0.5u"cm^2"
-    A::S = 71.0u"cm^2"
-    fixed_ΔV::V = 1.5u"V"
-end
-
 function capacitance(df, scan_rate, quadrant, fixed_ΔV)
     Δt, ΔV, ∫IdV = discharge_area(df, quadrant, fixed_ΔV)
 
