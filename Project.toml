@@ -15,7 +15,6 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 CSV = "0.6"
-DataFrames = "0.20"
 Interpolations = "0.12"
 NumericalIntegration = "0.2"
 Parameters = "0.12"
