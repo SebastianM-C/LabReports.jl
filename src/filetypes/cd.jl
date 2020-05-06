@@ -60,7 +60,7 @@ end
 function pushfirst(df, value)
     types = eltype.(eachcol(df))
     line = (Vector{types[i]}([v]) for (i,v) in enumerate(value))
-    to_add = DataFrame(;zip(names(df), line)...)
+    to_add = DataFrame(;zip(propertynames(df), line)...)
     append!(to_add, df)
 end
 
