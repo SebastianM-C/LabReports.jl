@@ -21,44 +21,6 @@ function datafile(filename::String, ext, delim, extra_rules)
     T(filename, savename, units, name_rules)
 end
 
-function DataFile(filename::String, ext, delim, rename=true)
-    filename = preprocess(filename, rename)
-    savename = joinpath(dirname(filename), basename(filename) * ext)
-    units = extract_units(filename, delim)
-
-    idx = 1
-    if occursin("CV", filename)
-        legend_units = "mV/s"
-        idx = 2
-        T = Val{:CV}
-    elseif occursin("C&D", filename)
-        legend_units = "A"
-        T = Val{Symbol("C&D")}
-    elseif occursin("EIS", filename)
-        legend_units = "mA/cm^2"
-        T = Val{:EIS}
-    else
-        legend_units = ""
-        T = Val{:unknown}
-    end
-
-    DataFile{T}(filename, savename, units, legend_units, idx)
-end
-
-function preprocess(filename, rename)
-    !rename && return filename
-    if occursin("C&D", filename)
-        if !endswith(filename, "_C") && !endswith(filename, "_D")
-            new_filename = filename * "_D"
-            mv(filename, new_filename)
-            @info "Renamed $filename to $new_filename"
-            filename = new_filename
-        end
-    end
-
-    return filename
-end
-
 function extract_units(filename, delim)
     firstline = readline(filename)
     parts = split(firstline, delim)
