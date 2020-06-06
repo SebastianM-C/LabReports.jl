@@ -30,10 +30,7 @@ function to_origin(str)
 end
 
 function comment_value(datafile)
-    u = datafile.legend_units
-    idx = datafile.idx
-
     value = filevalue(datafile)
-    unicode_val = si_round(uparse(value*u), idx)
+    unicode_val = si_round(value, datafile.round_idx)
     return to_origin(unicode_val)
 end

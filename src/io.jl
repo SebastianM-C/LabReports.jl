@@ -11,7 +11,7 @@ function header(df, delim)
     return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
-function write_file(datafile::DataFile, df, delim)
+function write_file(datafile::AbstractDataFile, df, delim)
     ncols = length(eachcol(df))
     info = comment_value(datafile)
     units = join(datafile.units, delim)

@@ -1,27 +1,36 @@
-function find_files(folder, ext=".dat", delim=';', types = ["CV", "C&D", "EIS"];
-        exclude_with=ext, select_with="", rename=true)
+function find_files(folder, ext=".dat", delim=';';
+                    exclude_with=ext,
+                    select_with="",
+                    exclude_dirs=[],
+                    extra_rules=(type=Dict(), name=(;)))
+    dirs = setdiff(dirs_in_folder(folder, true), exclude_dirs)
+    data = Vector{AbstractDataFile}()
 
-    dirs = dirs_in_folder(folder, true)
-    data = Dict{String,Vector{DataFile}}()
     for dir in dirs
         files = readdir(dir, join=true)
         files = files[isfile.(files)]
 
         for file in files
-            for type in types
-                if occursin(type, file) && occursin(select_with, file) && !exclude(file, exclude_with)
-                    if haskey(data, type)
-                        push!(data[type], DataFile(file, ext, delim, rename))
-                    else
-                        push!(data, type=>[DataFile(file, ext, delim, rename)])
-                    end
-                end
+            if occursin(select_with, file) && !exclude(file, exclude_with)
+                push!(data, datafile(file, ext, delim, extra_rules))
             end
         end
     end
 
     return data
 end
+
+const type_detection = Dict(
+    "CV"  => CiclycVoltammetry,
+    "C&D" => GalvanostaticChargeDischarge,
+    "EIS" => ElectrochemicalImpedanceSpectroscopy
+)
+
+const name_contents = (
+    type    = 2,
+    val     = 3,
+    cd_type = 4,
+)
 
 function dirs_in_folder(folder, keep_root)
     contents = readdir(folder, join=true)
@@ -57,6 +66,21 @@ function filevalues(datafiles)
     return vals
 end
 
+function filevalue(filename, name_rules)
+    fn = basename(filename)
+    parts = split(fn, '_')
+
+    return parts[name_rules.val]
+end
+
+filevalue(f::CiclycVoltammetry) = f.scan_rate
+filevalue(f::GalvanostaticChargeDischarge) = f.I
+filevalue(f::ElectrochemicalImpedanceSpectroscopy) = f.U
+
+filetype(::CiclycVoltammetry) = "CV"
+filetype(::GalvanostaticChargeDischarge) = "C&D"
+filetype(::ElectrochemicalImpedanceSpectroscopy) = "EIS"
+
 function common_values(data)
     fvs = filevalues(data)
 
@@ -69,26 +93,14 @@ function common_values(data)
     return common
 end
 
-process_data(type::String, data; args...) = process_data(Val(Symbol(type)), data; args...)
-
-value_index(datafile) = 3
-
-function filevalue(datafile, ext="")
-    filename = isempty(ext) ? datafile.filename : replace(datafile.filename, ext=>"")
-    fn = basename(filename)
-    parts = split(fn, '_')
-    idx = value_index(datafile)
-    replace(parts[idx], " "=>"")
-end
-
-function groupbyfolder(datafiles)
-    data = Dict{String,Vector{DataFile}}()
+function DataFrames.groupby(f, datafiles::Vector{T}) where {T <: AbstractDataFile}
+    data = Dict{String,Vector{AbstractDataFile}}()
     for df in datafiles
-        f = foldervalue(df)
-        if haskey(data, f)
-            push!(data[f], df)
+        i = f(df)
+        if haskey(data, i)
+            push!(data[i], df)
         else
-            data[f] = [df]
+            data[i] = [df]
         end
     end
     return data

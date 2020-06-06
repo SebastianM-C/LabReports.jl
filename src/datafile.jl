@@ -6,6 +6,21 @@ struct DataFile{T}
     idx::Int
 end
 
+abstract type AbstractDataFile end
+
+function datafile(filename::String, ext, delim, extra_rules)
+    savename = joinpath(dirname(filename), basename(filename) * ext)
+    units = extract_units(filename, delim)
+    type_rules = merge(type_detection, extra_rules.type)
+    name_rules = merge(name_contents, extra_rules.name)
+
+    name = split(basename(filename), "_")
+    type = name[name_rules.type]
+    T = type_rules[type]
+
+    T(filename, savename, units, name_rules)
+end
+
 function DataFile(filename::String, ext, delim, rename=true)
     filename = preprocess(filename, rename)
     savename = joinpath(dirname(filename), basename(filename) * ext)

@@ -1,3 +1,32 @@
+struct GalvanostaticChargeDischarge <: AbstractDataFile
+    filename::String
+    savename::String
+    units::Vector{String}
+    is_charging::Bool
+    I::Quantity
+    round_idx::Int
+    name_rules::NamedTuple
+end
+
+function GalvanostaticChargeDischarge(filename, savename, units, name_rules)
+    is_charging = cd_status(filename, name_rules)
+    legend_units = u"A"
+    round_idx = 1
+    val = parse(Float64, filevalue(filename, name_rules))
+    I = val*legend_units
+
+    GalvanostaticChargeDischarge(filename, savename, units, is_charging, I, round_idx, name_rules)
+end
+
+function cd_status(filename, name_rules)
+    name = split(basename(filename), "_")
+    if length(name) < name_rules.cd_type
+        return false
+    end
+    cd_part = name[name_rules.cd_type]
+    return cd_part == "C"
+end
+
 function DataFrames.rename!(df, ::DataFile{Val{Symbol("C&D")}})
     namemap = Dict("WE(1).Potential (V)"=>"Potential (V)",
                    "Time (s)"=>"Other Time (s)",
