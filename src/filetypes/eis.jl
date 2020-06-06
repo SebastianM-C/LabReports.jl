@@ -1,7 +1,7 @@
 struct ElectrochemicalImpedanceSpectroscopy <: AbstractDataFile
     filename::String
     savename::String
-    units::Vector{String}
+    units::Vector{Unitful.Units}
     U::Quantity
     round_idx::Int
     name_rules::NamedTuple

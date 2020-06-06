@@ -128,6 +128,13 @@ function results(folder, type, parameter_val, file_val; processed=true, reductio
     return datafile, df
 end
 
+function strip_units!(df)
+    re = r"(?<name>^.*)(?<unit>( .*))"
+    n = names(df)
+    new_names = replace.(n, re=>s"\g<name>")
+    rename!(df, new_names)
+end
+
 function clear(dir, to_delete)
     for (root,dirs,files) in walkdir(dir)
         for file in files

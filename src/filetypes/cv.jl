@@ -1,7 +1,7 @@
 struct CiclycVoltammetry <: AbstractDataFile
     filename::String
     savename::String
-    units::Vector{String}
+    units::Vector{Unitful.Units}
     scan_rate::Quantity
     round_idx::Int
     name_rules::NamedTuple
@@ -16,9 +16,9 @@ function CiclycVoltammetry(filename, savename, units, name_rules)
     CiclycVoltammetry(filename, savename, units, scan_rate, round_idx, name_rules)
 end
 
-function DataFrames.rename!(df, ::DataFile{Val{:CV}})
-    namemap = Dict("WE(1).Current (A)"=>"Current (mA)",
-                   "WE(1).Potential (V)"=>"Potential (V)")
+function DataFrames.rename!(df, ::CiclycVoltammetry)
+    namemap = Dict("WE(1).Current"=>"Current",
+                   "WE(1).Potential"=>"Potential")
     rename!(df, namemap)
 end
 

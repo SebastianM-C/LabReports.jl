@@ -24,12 +24,14 @@ end
 function extract_units(filename, delim)
     firstline = readline(filename)
     parts = split(firstline, delim)
-    units = String[]
+    units = Unitful.Units[]
 
     for p in parts
-        m = match(r" \((?<unit>\w)\)", p)
+        m = match(r"(?<name>^.*) (?<unit>(.*))", p)
         if !isnothing(m)
-            push!(units, m[:unit])
+            push!(units, uparse(m[:unit]))
+        else
+            push!(units, NoUnits)
         end
     end
 

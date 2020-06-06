@@ -1,7 +1,7 @@
 struct GalvanostaticChargeDischarge <: AbstractDataFile
     filename::String
     savename::String
-    units::Vector{String}
+    units::Vector{Unitful.Units}
     is_charging::Bool
     I::Quantity
     round_idx::Int
@@ -28,9 +28,9 @@ function cd_status(filename, name_rules)
 end
 
 function DataFrames.rename!(df, ::DataFile{Val{Symbol("C&D")}})
-    namemap = Dict("WE(1).Potential (V)"=>"Potential (V)",
-                   "Time (s)"=>"Other Time (s)",
-                   "Corrected time (s)"=>"Time (s)")
+    namemap = Dict("WE(1).Potential"=>"Potential",
+                   "Time"=>"Other_Time",
+                   "Corrected time"=>"Time")
     rename!(df, namemap)
 end
 

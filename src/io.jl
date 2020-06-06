@@ -1,5 +1,6 @@
 function read_file(datafile, datarow=2, rename=true, delim=';')
     df = CSV.read(datafile.filename, delim=delim, datarow=datarow, copycols=true)
+    strip_units!(df)
     rename && rename!(df, datafile)
 
     return df
@@ -14,10 +15,10 @@ end
 function write_file(datafile::AbstractDataFile, df, delim)
     ncols = length(eachcol(df))
     info = comment_value(datafile)
-    units = join(datafile.units, delim)
+    units = to_origin(join(datafile.units, delim))
     new_line = join(repeat([info], ncols), delim)
 
-    write_file(df, new_line, datafile.savename, delim)
+    write_file(df, (units, new_line), datafile.savename, delim)
 end
 
 function write_file(df::AbstractDataFrame, extra, filename, delim)
