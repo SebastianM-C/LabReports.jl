@@ -3,16 +3,17 @@ struct ElectrochemicalImpedanceSpectroscopy <: AbstractDataFile
     savename::String
     units::Vector{Unitful.Units}
     U::Quantity
+    porosity::Quantity
     round_idx::Int
     name_rules::NamedTuple
 end
 
 function ElectrochemicalImpedanceSpectroscopy(filename, savename, units, name_rules)
-    legend_units = u"mA/cm^2"
     round_idx = 1
     U = uparse(filevalue(filename, name_rules))
+    porosity = parse(Float64, foldervalue(filename)) * u"mA/cm^2"
 
-    ElectrochemicalImpedanceSpectroscopy(filename, savename, units, U, round_idx, name_rules)
+    ElectrochemicalImpedanceSpectroscopy(filename, savename, units, U, porosity, round_idx, name_rules)
 end
 
 function DataFrames.rename!(df, ::ElectrochemicalImpedanceSpectroscopy) end

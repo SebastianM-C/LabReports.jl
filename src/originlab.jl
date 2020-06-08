@@ -29,8 +29,8 @@ function to_origin(str)
     replace_unicode(str)
 end
 
-function comment_value(datafile)
-    value = filevalue(datafile)
+function comment_value(f, datafile)
+    value = f(datafile)
     unicode_val = si_round(value, datafile.round_idx)
     return to_origin(unicode_val)
 end

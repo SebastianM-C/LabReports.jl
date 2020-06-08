@@ -3,17 +3,17 @@ struct CiclycVoltammetry <: AbstractDataFile
     savename::String
     units::Vector{Unitful.Units}
     scan_rate::Quantity
+    porosity::Quantity
     round_idx::Int
     name_rules::NamedTuple
 end
 
 function CiclycVoltammetry(filename, savename, units, name_rules)
-    legend_units = u"mV/s"
     round_idx = 2
-    val = filevalue(filename, name_rules)
-    scan_rate = parse(Float64, val) * legend_units
+    scan_rate = parse(Float64, filevalue(filename, name_rules)) * u"mV/s"
+    porosity  = parse(Float64, foldervalue(filename)) * u"mA/cm^2"
 
-    CiclycVoltammetry(filename, savename, units, scan_rate, round_idx, name_rules)
+    CiclycVoltammetry(filename, savename, units, scan_rate, porosity, round_idx, name_rules)
 end
 
 function DataFrames.rename!(df, ::CiclycVoltammetry)

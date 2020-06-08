@@ -49,7 +49,8 @@ function files_with_val(datafiles, val, ext="")
     return files
 end
 
-foldervalue(datafile) = splitpath(datafile.filename)[2]
+foldervalue(filename) = splitpath(filename)[2]
+foldervalue(datafile::AbstractDataFile) = datafile.porosity
 
 function filevalues(datafiles)
     vals = Dict{String,Set{String}}()

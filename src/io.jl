@@ -14,11 +14,13 @@ end
 
 function write_file(datafile::AbstractDataFile, df, delim)
     ncols = length(eachcol(df))
-    info = comment_value(datafile)
+    file_info = comment_value(filevalue, datafile)
+    file_line = join(repeat([file_info], ncols), delim)
+    folder_info = comment_value(foldervalue, datafile)
+    folder_line = join(repeat([folder_info], ncols), delim) * delim
     units = to_origin(join(datafile.units, delim))
-    new_line = join(repeat([info], ncols), delim)
 
-    write_file(df, (units, new_line), datafile.savename, delim)
+    write_file(df, (units, file_line, folder_line), datafile.savename, delim)
 end
 
 function write_file(df::AbstractDataFrame, extra, filename, delim)
