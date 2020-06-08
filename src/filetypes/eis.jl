@@ -16,7 +16,11 @@ function ElectrochemicalImpedanceSpectroscopy(filename, savename, units, name_ru
     ElectrochemicalImpedanceSpectroscopy(filename, savename, units, U, porosity, round_idx, name_rules)
 end
 
-function DataFrames.rename!(df, ::ElectrochemicalImpedanceSpectroscopy) end
+function DataFrames.rename!(df, ::ElectrochemicalImpedanceSpectroscopy)
+    namemap = Dict("Z'"=>"ReZ",
+                   "-Z''"=>"ImZ")
+    rename!(df, namemap)
+end
 
 function process_data(data::ElectrochemicalImpedanceSpectroscopy; select)
     col, op, val = select
