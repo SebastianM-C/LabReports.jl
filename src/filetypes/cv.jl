@@ -22,14 +22,12 @@ function DataFrames.rename!(df, ::CiclycVoltammetry)
     rename!(df, namemap)
 end
 
-function process_data(::Val{:CV}, data; select)
+function process_data(data::CiclycVoltammetry; select)
     col, op, val = select
-    for f in data["CV"]
-        df = read_file(f)
-        c = getproperty(df, col)
-        fd = getindex(df, op.(c, val), :)
-        push!(fd, fd[1, :])
+    df = read_file(data)
+    c = getproperty(df, col)
+    fd = getindex(df, op.(c, val), :)
+    push!(fd, fd[1, :])
 
-        write_file(f, fd, ';')
-    end
+    write_file(data, fd, ';')
 end
