@@ -28,6 +28,10 @@ function process_data(data::CiclycVoltammetry; select)
     c = getproperty(df, col)
     fd = getindex(df, op.(c, val), :)
     push!(fd, fd[1, :])
+    # convert to mA
+    idx = findfirst(n->n=="Current", names(fd))
+    fd[!, :Current] .*= ustrip(u"mA", 1data.units[idx])
+    data.units[idx] = u"mA"
 
     write_file(data, fd, ';')
 end
