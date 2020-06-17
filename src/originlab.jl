@@ -1,4 +1,4 @@
-exclude(f, ext) = occursin(ext, f) || endswith(f, ".opj")
+exclude(f, ext) = any(occursin.(ext, Ref(f))) || endswith(f, ".opj")
 
 function replace_unicode(str)
     new_string = ""

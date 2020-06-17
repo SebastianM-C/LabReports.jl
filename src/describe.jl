@@ -1,5 +1,5 @@
 function find_files(folder, ext=".dat", delim=';';
-                    exclude_with=ext,
+                    exclude_with=[ext],
                     select_with="",
                     exclude_dirs=[],
                     extra_rules=(type=Dict(), name=(;)))
@@ -70,8 +70,9 @@ end
 function filevalue(filename, name_rules)
     fn = basename(filename)
     parts = split(fn, '_')
+    val = parts[name_rules.val]
 
-    return parts[name_rules.val]
+    return replace(val, ' '=>"")
 end
 
 filevalue(f::CiclycVoltammetry) = f.scan_rate
