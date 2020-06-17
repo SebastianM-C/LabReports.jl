@@ -30,3 +30,5 @@ function si_round(q::Quantity, idx=1)
     end
      @sprintf("%.3g %s", ustrip(q), unit(q))
 end
+
+si_round(::Missing, idx) = ""
