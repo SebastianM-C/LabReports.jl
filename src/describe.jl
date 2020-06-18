@@ -2,7 +2,7 @@ function find_files(folder, ext=".dat", delim=';';
                     exclude_with=[ext],
                     select_with="",
                     exclude_dirs=[],
-                    extra_rules=(type=Dict(), name=(;)))
+                    extra_rules=(type=Dict(), name=NamedTuple()))
     dirs = setdiff(dirs_in_folder(folder, true), exclude_dirs)
     data = Vector{AbstractDataFile}()
 
@@ -29,7 +29,7 @@ const type_detection = Dict(
 const name_contents = (
     type    = 2,
     val     = 3,
-    cd_type = 4,
+    cd_location = 4,
 )
 
 function dirs_in_folder(folder, keep_root)
