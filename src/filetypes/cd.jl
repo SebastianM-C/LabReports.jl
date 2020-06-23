@@ -42,13 +42,13 @@ function find_pair(datafile, list)
 end
 
 function name_with_CD(datafile)
-    filename = datafile.filename
+    filename = datafile.savename
     name_rules = datafile.name_rules
 
     parts = rsplit(filename, '.', limit=2)
     name_parts = split(basename(parts[1]), "_")
     name_parts[name_rules.cd_location] = "CD"
-    name = join(name_parts, "_")
+    name = joinpath(dirname(parts[1]), join(name_parts, "_"))
 
     name * "." * parts[2]
 end
@@ -64,7 +64,7 @@ function process_data(datafiles::Vector{GalvanostaticChargeDischarge}; insert_D,
 
                 df_CD, df_D = postprocess(data, df, pair_df, insert_D, continue_col)
                 new_name = name_with_CD(data)
-                merged = GalvanostaticChargeDischarge(data.name, new_name, data.units, data.name_rules)
+                merged = GalvanostaticChargeDischarge(data.filename, new_name, data.units, data.name_rules)
 
                 write_file(merged, df_CD, ';')
                 write_file(pair, df_D, ';')
