@@ -14,12 +14,12 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
-CSV = "0.6"
-OffsetArrays = "1.0"
-Parameters = "0.12"
+CSV = "0.6, 0.7"
 DataFrames = "0.20, 0.21"
 Interpolations = "0.12"
 NumericalIntegration = "0.2"
+OffsetArrays = "1.0"
+Parameters = "0.12"
 Unitful = "1.0"
 julia = "1"
 
