@@ -68,6 +68,9 @@ function filevalues(datafiles)
 end
 
 function filevalue(filename, name_rules)
+    if haskey(name_rules, :processed_ext)
+        filename = replace(filename, name_rules.processed_ext=>"")
+    end
     fn = basename(filename)
     parts = split(fn, '_')
     val = parts[name_rules.val]
@@ -96,7 +99,7 @@ function common_values(data)
 end
 
 function DataFrames.groupby(f, datafiles::Vector{T}) where {T <: AbstractDataFile}
-    data = Dict{String,Vector{AbstractDataFile}}()
+    data = Dict{Any,Vector{AbstractDataFile}}()
     for df in datafiles
         i = f(df)
         if haskey(data, i)

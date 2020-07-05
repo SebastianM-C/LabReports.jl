@@ -29,6 +29,16 @@ function to_origin(str)
     replace_unicode(str)
 end
 
+function from_origin(str)
+    origin_codepoint = r"\\x\((?<c>[a-z0-9]{4})\)"
+    matches = eachmatch(origin_codepoint, str)
+    for m in matches
+        str = replace(str, m.match=>unescape_string("\\u"*m[:c]))
+    end
+
+    return str
+end
+
 function comment_value(f, datafile)
     value = f(datafile)
     unicode_val = si_round(value, datafile.round_idx)

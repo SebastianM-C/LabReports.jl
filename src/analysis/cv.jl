@@ -21,8 +21,7 @@ end
 
 function CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     ext = ".dat"    # using processed data
-    scan_rate = parse(Float64, filevalue(datafile, ext)) * uparse(datafile.legend_units)
-    porosity = parse(Int, foldervalue(datafile))
+    @unpack porosity, scan_rate = datafile
     @unpack a, A, fixed_ΔV = setup
 
     Δt, ΔV, area, C = capacitance(df, scan_rate, quadrant, fixed_ΔV)

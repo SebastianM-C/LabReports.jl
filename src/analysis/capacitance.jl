@@ -43,17 +43,20 @@ function add_report!(result_df, datafile, folder, setup)
 end
 
 function add_report!(result_df, datafile, quadrant, folder, setup)
-    df = read_file(datafile, 3, false)
+    @show datafile
+    df = read_file(datafile, 5, false)
     cr = CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     add_report!(result_df, cr)
 end
 
-function compute_capacitances(folder; cv_setup=[CSetup(),CSetup()], cd_setup=CSetup())
-    data = find_files(folder)
-    processed_data = find_files(folder, exclude_with=r"!", select_with=".dat", rename=false)
+function compute_capacitances(folder; cv_setup=[CSetup(),CSetup()], cd_setup=CSetup(),
+        extra_rules=(), processed_extra_rules=(), exclude_dirs=[])
+    data = find_files(folder, extra_rules=extra_rules, exclude_dirs=exclude_dirs)
+    processed_data = find_files(folder, extra_rules=processed_extra_rules, exclude_dirs=exclude_dirs,
+        exclude_with=[r"!"], select_with=".dat")
 
-    grouped = groupbyfolder(data["C&D"])
-    processed_grouped = groupbyfolder(processed_data["CV"])
+    grouped = groupby(foldervalue, groupby(filetype, data)["C&D"])
+    processed_grouped = groupby(foldervalue, groupby(filetype, processed_data)["CV"])
     @assert keys(grouped) == keys(processed_grouped)
 
     cd_units = cd_report_units()

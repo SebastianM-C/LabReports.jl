@@ -81,8 +81,8 @@ function integration_domain(x, y, quadrant, direction)
 end
 
 function discharge_area(df, quadrant, fixed_ΔV)
-    I, V = df[!, Symbol("Current (mA)")], df[!, Symbol("Potential (V)")]
-    t = df[!, Symbol("Time (s)")]
+    I, V = df[!, Symbol("Current")], df[!, Symbol("Potential")]
+    t = df[!, Symbol("Time")]
 
     a_idx, b_idx = integration_domain(V, I, quadrant, :orar)
     @assert a_idx < b_idx

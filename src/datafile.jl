@@ -9,8 +9,13 @@ end
 abstract type AbstractDataFile end
 
 function datafile(filename::String, ext, delim, extra_rules)
-    savename = joinpath(dirname(filename), basename(filename) * ext)
-    units = extract_units(filename, delim)
+    if !endswith(filename, ext)
+        savename = joinpath(dirname(filename), basename(filename) * ext)
+        units = extract_units(filename, delim)
+    else
+        savename = filename
+        units = extract_units(filename)
+    end
     type_rules = merge(type_detection, extra_rules.type)
     name_rules = merge(name_contents, extra_rules.name)
 
@@ -30,6 +35,28 @@ function extract_units(filename, delim)
         m = match(r"(?<name>^.*) (?<unit>(.*))", p)
         if !isnothing(m)
             push!(units, uparse(m[:unit]))
+        else
+            push!(units, NoUnits)
+        end
+    end
+
+    return units
+end
+
+function extract_units(filename)
+    secondline = ""
+    open(filename, "r") do io
+        readline(io)
+        secondline = readline(io)
+    end
+    
+    units = Unitful.Units[]
+    secondline = from_origin(secondline)
+    parts = split(secondline, ";")
+
+    for p in parts
+        if !isempty(p)
+            push!(units, uparse(p))
         else
             push!(units, NoUnits)
         end
