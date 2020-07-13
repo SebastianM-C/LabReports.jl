@@ -18,8 +18,17 @@ function datafile(filename::String, ext, delim, extra_rules)
     end
     type_rules = merge(type_detection, extra_rules.type)
     name_rules = merge(name_contents, extra_rules.name)
+    if hasproperty(extra_rules, :functions)
+        name_rules = @set name_rules.functions = merge(name_contents.functions, extra_rules.functions)
+    end
+    if hasproperty(extra_rules, :units)
+        name_rules = @set name_rules.implicit_units = merge(name_contents.implicit_units, extra_rules.units)
+    end
+    if hasproperty(extra_rules, :replace)
+        name_rules = @set name_rules.replace_str = merge(name_contents.replace_str, extra_rules.replace)
+    end
 
-    name = split(basename(filename), "_")
+    name = split(basename(filename), name_rules.separator)
     type = name[name_rules.type]
     T = type_rules[type]
 
@@ -49,7 +58,7 @@ function extract_units(filename)
         readline(io)
         secondline = readline(io)
     end
-    
+
     units = Unitful.Units[]
     secondline = from_origin(secondline)
     parts = split(secondline, ";")

@@ -12,15 +12,20 @@ function header(df, delim)
     return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
 
+function comment_line(datafile, f, delim, ncols)
+    info = comment_value(f, datafile)
+
+    join(repeat([info], ncols), delim)
+end
+
 function write_file(datafile::AbstractDataFile, df, delim)
     ncols = length(eachcol(df))
-    file_info = comment_value(filevalue, datafile)
-    file_line = join(repeat([file_info], ncols), delim)
-    folder_info = comment_value(foldervalue, datafile)
-    folder_line = join(repeat([folder_info], ncols), delim) * delim
+    file_line = comment_line(datafile, filevalue, delim, ncols)
+    folder_line = comment_line(datafile, foldervalue, delim, ncols) * delim
+    metadata_line = comment_line(datafile, metadata, delim, ncols)
     units = to_origin(join(datafile.units, delim))
 
-    write_file(df, (units, file_line, folder_line), datafile.savename, delim)
+    write_file(df, (units, file_line, folder_line, metadata_line), datafile.savename, delim)
 end
 
 function write_file(df::AbstractDataFrame, extra, filename, delim)

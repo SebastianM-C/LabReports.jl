@@ -7,6 +7,7 @@ using NumericalIntegration
 using Interpolations
 using OffsetArrays
 using Parameters
+using Setfield
 
 export find_files, filevalue, filevalues, foldervalue, filetype, files_with_val,
     common_values, process_data, clear, OriginLab, results, series_with_common_value,

@@ -1,10 +1,11 @@
-struct GalvanostaticChargeDischarge <: AbstractDataFile
+struct GalvanostaticChargeDischarge{E} <: AbstractDataFile
     filename::String
     savename::String
     units::Vector{Unitful.Units}
     is_charging::Bool
     I::Quantity
     porosity::Quantity
+    exposure_time::E
     round_idx::Int
     name_rules::NamedTuple
 end
@@ -12,10 +13,13 @@ end
 function GalvanostaticChargeDischarge(filename, savename, units, name_rules)
     is_charging = cd_status(filename, name_rules)
     round_idx = 1
-    I = parse(Float64, filevalue(filename, name_rules)) * u"A"
-    porosity = parse(Float64, foldervalue(filename)) * u"mA/cm^2"
+    name_rules = merge(name_rules, (I=name_rules.val,))
+    I = parse_quantity(filename, name_rules, :I)
+    porosity = parse_quantity(filename, name_rules, :porosity)
+    exposure_time = parse_quantity(filename, name_rules, :exposure_time)
 
-    GalvanostaticChargeDischarge(filename, savename, units, is_charging, I, porosity, round_idx, name_rules)
+    GalvanostaticChargeDischarge(filename, savename, units, is_charging,
+        I, porosity, exposure_time, round_idx, name_rules)
 end
 
 function cd_status(filename, name_rules)

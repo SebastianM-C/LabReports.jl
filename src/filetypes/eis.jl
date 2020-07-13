@@ -10,12 +10,9 @@ end
 
 function ElectrochemicalImpedanceSpectroscopy(filename, savename, units, name_rules)
     round_idx = 1
-    if get(name_rules, :eis_U, :none) == :filename
-        U = uparse(filevalue(filename, name_rules))
-    else
-        U = missing
-    end
-    porosity = parse(Float64, foldervalue(filename)) * u"mA/cm^2"
+    name_rules = merge(name_rules, (U=name_rules.val,))
+    U = parse_quantity(filename, name_rules, :U)
+    porosity = parse_quantity(filename, name_rules, :porosity)
 
     ElectrochemicalImpedanceSpectroscopy(filename, savename, units, U, porosity, round_idx, name_rules)
 end

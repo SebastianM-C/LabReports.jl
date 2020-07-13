@@ -10,8 +10,9 @@ end
 
 function CiclycVoltammetry(filename, savename, units, name_rules)
     round_idx = 2
-    scan_rate = parse(Float64, filevalue(filename, name_rules)) * u"mV/s"
-    porosity  = parse(Float64, foldervalue(filename)) * u"mA/cm^2"
+    name_rules = merge(name_rules, (scan_rate=name_rules.val,))
+    scan_rate = parse_quantity(filename, name_rules, :scan_rate)
+    porosity = parse_quantity(filename, name_rules, :porosity)
 
     CiclycVoltammetry(filename, savename, units, scan_rate, porosity, round_idx, name_rules)
 end

@@ -20,6 +20,57 @@ function find_files(folder, ext=".dat", delim=';';
     return data
 end
 
+foldervalue(filename) = splitpath(filename)[2]
+foldervalue(datafile::AbstractDataFile) = datafile.porosity
+
+function filevalues(datafiles)
+    vals = Dict{String,Set{String}}()
+    for file in datafiles
+        fdv = foldervalue(file)
+        fv = filevalue(file)
+        if haskey(vals, fdv)
+            push!(vals[fdv], fv)
+        else
+            push!(vals, fdv=>Set{String}([fv]))
+        end
+    end
+
+    return vals
+end
+
+function filevalue(filename, name_rules, key)
+    if haskey(name_rules, :processed_ext)
+        filename = replace(filename, name_rules.processed_ext=>"")
+    end
+    fn = basename(filename)
+    parts = split(fn, name_rules.separator)
+    val = parts[getproperty(name_rules, key)]
+
+    if haskey(name_rules, :replace_str)
+        for p in pairs(name_rules.replace_str)
+            val = replace(val, p)
+        end
+    end
+
+    return val
+end
+
+filevalue(f::CiclycVoltammetry) = f.scan_rate
+filevalue(f::GalvanostaticChargeDischarge) = f.I
+filevalue(f::ElectrochemicalImpedanceSpectroscopy) = f.U
+
+filetype(::CiclycVoltammetry) = "CV"
+filetype(::GalvanostaticChargeDischarge) = "C&D"
+filetype(::ElectrochemicalImpedanceSpectroscopy) = "EIS"
+
+function metadata(datafile)
+    if hasproperty(datafile, :exposure_time)
+        datafile.exposure_time
+    else
+        missing
+    end
+end
+
 const type_detection = Dict(
     "CV"  => CiclycVoltammetry,
     "C&D" => GalvanostaticChargeDischarge,
@@ -27,9 +78,13 @@ const type_detection = Dict(
 )
 
 const name_contents = (
-    type    = 2,
-    val     = 3,
+    separator = '_',
+    type = 2,
+    val = 3,
     cd_location = 4,
+    replace_str = Dict(' '=>""),
+    functions = (I = filevalue, scan_rate = filevalue, porosity = (f,r,k)->foldervalue(f)),
+    implicit_units = (I = u"A", scan_rate = u"mV/s", porosity = u"mA/cm^2"),
 )
 
 function dirs_in_folder(folder, keep_root)
@@ -49,42 +104,20 @@ function files_with_val(datafiles, val, ext="")
     return files
 end
 
-foldervalue(filename) = splitpath(filename)[2]
-foldervalue(datafile::AbstractDataFile) = datafile.porosity
-
-function filevalues(datafiles)
-    vals = Dict{String,Set{String}}()
-    for file in datafiles
-        fdv = foldervalue(file)
-        fv = filevalue(file)
-        if haskey(vals, fdv)
-            push!(vals[fdv], fv)
-        else
-            push!(vals, fdv=>Set{String}([fv]))
-        end
+function parse_quantity(filename, rules, key)
+    if hasproperty(rules.functions, key)
+        f = getproperty(rules.functions, key)
+    else
+        return missing
     end
 
-    return vals
-end
-
-function filevalue(filename, name_rules)
-    if haskey(name_rules, :processed_ext)
-        filename = replace(filename, name_rules.processed_ext=>"")
+    unit = getproperty(rules.implicit_units, key)
+    if !isnothing(unit)
+        parse(Float64, f(filename, rules, key)) * unit
+    else
+        uparse(f(filename, rules, key))
     end
-    fn = basename(filename)
-    parts = split(fn, '_')
-    val = parts[name_rules.val]
-
-    return replace(val, ' '=>"")
 end
-
-filevalue(f::CiclycVoltammetry) = f.scan_rate
-filevalue(f::GalvanostaticChargeDischarge) = f.I
-filevalue(f::ElectrochemicalImpedanceSpectroscopy) = f.U
-
-filetype(::CiclycVoltammetry) = "CV"
-filetype(::GalvanostaticChargeDischarge) = "C&D"
-filetype(::ElectrochemicalImpedanceSpectroscopy) = "EIS"
 
 function common_values(data)
     fvs = filevalues(data)
