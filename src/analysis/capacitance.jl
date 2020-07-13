@@ -43,8 +43,11 @@ function add_report!(result_df, datafile, folder, setup)
 end
 
 function add_report!(result_df, datafile, quadrant, folder, setup)
-    @show datafile
     df = read_file(datafile, 5, false)
+    if size(df, 1) < 4
+        @warn("Too few datapoints for $(datafile.filename)")
+        return
+    end
     cr = CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     add_report!(result_df, cr)
 end

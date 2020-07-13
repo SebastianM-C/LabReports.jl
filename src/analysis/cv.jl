@@ -25,7 +25,8 @@ function CVCapacitanceReport(datafile, df, quadrant, folder, setup)
     @unpack a, A, fixed_ΔV = setup
 
     Δt, ΔV, area, C = capacitance(df, scan_rate, quadrant, fixed_ΔV)
-    C_specific = specific_capacitance(C, porosity, folder, a, A)
+    # C_specific = specific_capacitance(C, porosity, folder, a, A)
+    C_specific = missing
     E = energy(C, ΔV)
     E_specific = energy(C_specific, ΔV)
     P = power(E, Δt)
@@ -56,9 +57,9 @@ function cv_result()
         :ΔV=>Float64[],
         :scan_rate=>Float64[],
         :C=>Float64[],
-        :C_specific=>Float64[],
+        :C_specific=>Union{Float64,Missing}[],
         :E=>Float64[],
-        :E_specific=>Float64[],
+        :E_specific=>Union{Float64,Missing}[],
         :P=>Float64[],
-        :P_specific=>Float64[])
+        :P_specific=>Union{Float64,Missing}[])
 end
