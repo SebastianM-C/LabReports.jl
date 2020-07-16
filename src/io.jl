@@ -24,6 +24,7 @@ function write_file(datafile::AbstractDataFile, df, delim)
     folder_line = comment_line(datafile, foldervalue, delim, ncols) * delim
     metadata_line = comment_line(datafile, metadata, delim, ncols)
     units = to_origin(join(datafile.units, delim))
+    metadata_line = replace(metadata_line, "minute"=>"minutes")
 
     write_file(df, (units, file_line, folder_line, metadata_line), datafile.savename, delim)
 end

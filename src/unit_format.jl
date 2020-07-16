@@ -16,6 +16,7 @@ power_step(::Any) = 3
 function shift_unit(u::Unitful.FreeUnits, d, idx)
     tu = typeof(u)
     us,ds,a = tu.parameters
+    idx = length(us) == 1 && idx > 1 ? 1 : idx
 
     uu,i = shift_unit(us[idx], d, power_step(1u))
 
