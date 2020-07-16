@@ -4,6 +4,7 @@ struct CiclycVoltammetry <: AbstractDataFile
     units::Vector{Unitful.Units}
     scan_rate::Quantity
     porosity::Quantity
+    exposure_time::Quantity
     round_idx::Int
     name_rules::NamedTuple
 end
@@ -13,8 +14,10 @@ function CiclycVoltammetry(filename, savename, units, name_rules)
     name_rules = merge(name_rules, (scan_rate=name_rules.val,))
     scan_rate = parse_quantity(filename, name_rules, :scan_rate)
     porosity = parse_quantity(filename, name_rules, :porosity)
+    exposure_time = parse_quantity(filename, name_rules, :exposure_time)
 
-    CiclycVoltammetry(filename, savename, units, scan_rate, porosity, round_idx, name_rules)
+    CiclycVoltammetry(filename, savename, units, scan_rate, porosity,
+        exposure_time, round_idx, name_rules)
 end
 
 function DataFrames.rename!(df, ::CiclycVoltammetry)

@@ -84,7 +84,7 @@ const name_contents = (
     cd_location = 4,
     replace_str = Dict(' '=>""),
     functions = (I = filevalue, scan_rate = filevalue, porosity = (f,r,k)->foldervalue(f)),
-    implicit_units = (I = u"A", scan_rate = u"mV/s", porosity = u"mA/cm^2"),
+    implicit_units = (I = u"A", scan_rate = u"mV/s", porosity = u"mA/cm^2", exposure_time = u"minute"),
 )
 
 function dirs_in_folder(folder, keep_root)
