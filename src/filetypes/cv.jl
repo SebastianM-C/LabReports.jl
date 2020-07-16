@@ -35,7 +35,11 @@ function process_data(data::CiclycVoltammetry; select)
     # convert to mA
     idx = findfirst(n->n=="Current", names(fd))
     fd[!, :Current] .*= ustrip(u"mA", 1data.units[idx])
+    original_units = data.units[idx]
     data.units[idx] = u"mA"
 
     write_file(data, fd, ';')
+    data.units[idx] = original_units
+
+    return nothing
 end
