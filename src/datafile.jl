@@ -16,8 +16,16 @@ function datafile(filename::String, ext, delim, extra_rules)
         savename = filename
         units = extract_units(filename)
     end
-    type_rules = merge(type_detection, extra_rules.type)
-    name_rules = merge(name_contents, extra_rules.name)
+    if hasproperty(extra_rules, :type)
+        type_rules = merge(type_detection, extra_rules.type)
+    else
+        type_rules = type_detection
+    end
+    if hasproperty(extra_rules, :name)
+        name_rules = merge(name_contents, extra_rules.name)
+    else
+        name_rules = name_contents
+    end
     if hasproperty(extra_rules, :functions)
         name_rules = @set name_rules.functions = merge(name_contents.functions, extra_rules.functions)
     end
