@@ -90,7 +90,7 @@ function discharge_area(df, quadrant, fixed_ΔV)
     I, V = I[a_idx:b_idx], V[a_idx:b_idx]
     # account for integrating "in reverse"
     sgn = V[begin] > V[end] ? -1 : 1
-    ∫IdV = sgn * integrate(V, I) * u"V*A"
+    ∫IdV = sgn * integrate(V, I) * u"V*mA"
     Δt = -sgn*(t[b_idx] - t[a_idx]) * u"s"
     ΔV = !isnothing(fixed_ΔV) ? sgn*fixed_ΔV : (V[end] - V[begin]) * u"V"
 

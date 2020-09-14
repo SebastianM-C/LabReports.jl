@@ -35,7 +35,7 @@ function add_report!(df, cr)
 end
 
 function add_report!(result_df, datafile, folder, setup)
-    if endswith(datafile.filename, "_D")
+    if !datafile.is_charging
         df = read_file(datafile)
         cr = CDCapacitanceReport(datafile, df, folder, setup)
         add_report!(result_df, cr)
@@ -43,7 +43,7 @@ function add_report!(result_df, datafile, folder, setup)
 end
 
 function add_report!(result_df, datafile, quadrant, folder, setup)
-    df = read_file(datafile, 5, false)
+    df = read_file(datafile, processed_datarow, false)
     if size(df, 1) < 4
         @warn("Too few datapoints for $(datafile.filename)")
         return
@@ -52,68 +52,68 @@ function add_report!(result_df, datafile, quadrant, folder, setup)
     add_report!(result_df, cr)
 end
 
-function compute_capacitances(folder; cv_setup=[CSetup(),CSetup()], cd_setup=CSetup(),
-        extra_rules=(), processed_extra_rules=(), exclude_dirs=[])
-    data = find_files(folder, extra_rules=extra_rules, exclude_dirs=exclude_dirs)
-    processed_data = find_files(folder, extra_rules=processed_extra_rules, exclude_dirs=exclude_dirs,
+function compute_capacitances(folder, spec; cv_setup=[CSetup(),CSetup()], cd_setup=CSetup(),
+        extra_rules=(), processed_extra_rules=extra_rules, exclude_dirs=[])
+    data = find_files(folder, spec, extra_rules=extra_rules, exclude_with=[".dat",".csv"], exclude_dirs=exclude_dirs)
+    processed_data = find_files(folder, spec, extra_rules=processed_extra_rules, exclude_dirs=exclude_dirs,
         exclude_with=[r"!"], select_with=".dat")
 
     grouped = groupby(foldervalue, groupby(filetype, data)["C&D"])
     processed_grouped = groupby(foldervalue, groupby(filetype, processed_data)["CV"])
-    @assert keys(grouped) == keys(processed_grouped)
 
     cd_units = cd_report_units()
     cv_units = cv_report_units()
 
+
     for f in keys(grouped)
-        cd_datafiles = grouped[f]
-        cv_datafiles = processed_grouped[f]
-
-        cd_report = cd_result()
-        cv_report4 = cv_result()
-        cv_report2 = cv_result()
-
-        for datafile in cd_datafiles
-            add_report!(cd_report, datafile, folder, cd_setup)
-        end
-
-        for datafile in cv_datafiles
-            add_report!(cv_report4, datafile, 4, folder, cv_setup[1])
-            add_report!(cv_report2, datafile, 2, folder, cv_setup[2])
-        end
-
-        rename_cols!(df) = rename!(df, Dict(
-            "E_specific"=>"Energy density",
-            "P_specific"=>"Power density",
-            "C"=>"C_abs",
-            "C_specific"=>"C",
-            "Δt"=>replace_unicode("Δt"),
-            "ΔV"=>replace_unicode("ΔV")))
-        rename_cols!(cd_report)
-        rename_cols!(cv_report4)
-        rename_cols!(cv_report2)
-        sort!(cd_report, :I)
-        sort!(cv_report4, :scan_rate)
-        sort!(cv_report2, :scan_rate)
-
-        comment(df) = join(repeat([f*replace_powers(" mA cm^-2")], size(df,2)), ',')
-
-        write_file(
-            cd_report,
-            (cd_units, comment(cd_report)),
-            joinpath(folder, f, "cd_capacitances.csv"),
-            ',')
-        write_file(
-            cv_report4,
-            (cv_units, comment(cv_report4)),
-            joinpath(folder, f, "cv_capacitances4.csv"),
-            ',')
-        write_file(
-            cv_report2,
-            (cv_units, comment(cv_report2)),
-            joinpath(folder, f, "cv_capacitances2.csv"),
-            ',')
+        cd_name = joinpath(folder, string(Int(ustrip(f))), "cd_capacitances.csv")
+        df = compute_capacitances(folder, grouped, f, cd_result, cd_setup, nothing)
+        write_capacitance(df, cd_name, :I, cd_units, f)
+    end
+    for f in keys(processed_grouped)
+        cv_name1 = joinpath(folder, string(Int(ustrip(f))), "cv_capacitances4.csv")
+        cv_name2 = joinpath(folder, string(Int(ustrip(f))), "cv_capacitances2.csv")
+        df1 = compute_capacitances(folder, processed_grouped, f, cv_result, cv_setup[1], 4)
+        df2 = compute_capacitances(folder, processed_grouped, f, cv_result, cv_setup[2], 2)
+        write_capacitance(df1, cv_name1, :scan_rate, cv_units, f)
+        write_capacitance(df2, cv_name2, :scan_rate, cv_units, f)
     end
 
     return nothing
+end
+
+function write_capacitance(report, name, sort_col, units, key)
+    rename_cols!(df) = rename!(df, Dict(
+        "E_specific"=>"Energy density",
+        "P_specific"=>"Power density",
+        "C"=>"C_abs",
+        "C_specific"=>"C",
+        "Δt"=>replace_unicode("Δt"),
+        "ΔV"=>replace_unicode("ΔV")))
+    rename_cols!(report)
+    sort!(report, sort_col)
+
+    comment(df) = join(repeat([replace_powers(string(key))], size(df,2)), ',')
+
+    write_file(
+        report,
+        (units, comment(report)),
+        name,
+        ',')
+end
+
+function compute_capacitances(folder, grouped, key, result_f, c_setup, idx)
+    datafiles = grouped[key]
+
+    report = result_f()
+
+    for datafile in datafiles
+        if isnothing(idx)
+            add_report!(report, datafile, folder, c_setup)
+        else
+            add_report!(report, datafile, idx, folder, c_setup)
+        end
+    end
+
+    return report
 end

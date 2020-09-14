@@ -12,7 +12,7 @@ struct CDCapacitanceReport{U1,U2,U3,U4,U5,U6,U7,U8,U9,U10}
 end
 
 function capacitance(df, I, fixed_ΔV)
-    t, V = df[!, Symbol("Time (s)")], df[!, Symbol("Potential (V)")]
+    t, V = df[!, Symbol("Time")], df[!, Symbol("Potential")]
     idxs = findall(v->v > 0, V)
     t, V = t[idxs], V[idxs]
 
@@ -24,12 +24,12 @@ function capacitance(df, I, fixed_ΔV)
 end
 
 function CDCapacitanceReport(datafile, df, folder, setup)
-    I = parse(Float64, filevalue(datafile)) * uparse(datafile.legend_units)
-    porosity = parse(Int, foldervalue(datafile))
+    @unpack I, porosity = datafile
     @unpack a, A, fixed_ΔV = setup
 
     Δt, ΔV, area, C = capacitance(df, I, fixed_ΔV)
-    C_specific = specific_capacitance(C, porosity, folder, a, A)
+    # C_specific = specific_capacitance(C, porosity, folder, a, A)
+    C_specific = missing
     E = energy(C, ΔV)
     E_specific = energy(C_specific, ΔV)
     P = power(E, Δt)
@@ -58,9 +58,9 @@ function cd_result()
         :ΔV=>Float64[],
         :I=>Float64[],
         :C=>Float64[],
-        :C_specific=>Float64[],
+        :C_specific=>Union{Float64,Missing}[],
         :E=>Float64[],
-        :E_specific=>Float64[],
+        :E_specific=>Union{Float64,Missing}[],
         :P=>Float64[],
-        :P_specific=>Float64[])
+        :P_specific=>Union{Float64,Missing}[])
 end
