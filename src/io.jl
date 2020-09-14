@@ -7,7 +7,7 @@ function read_file(datafile, datarow=2, rename=true, delim=';')
 end
 
 function header(df, delim)
-    buffer = join(names(df), delim)
+    buffer = join(replace_unicode.(names(df)), delim)
 
     return buffer * (@static Sys.iswindows() ? "\r\n" : '\n')
 end
@@ -18,7 +18,7 @@ function comment_line(datafile, f, delim, ncols)
     join(repeat([info], ncols), delim)
 end
 
-function write_file(datafile::AbstractDataFile, df, delim)
+function write_file(datafile::AbstractDataFile, df, delim, filename=datafile.savename)
     ncols = length(eachcol(df))
     file_line = comment_line(datafile, filevalue, delim, ncols)
     folder_line = comment_line(datafile, foldervalue, delim, ncols) * delim
@@ -26,7 +26,7 @@ function write_file(datafile::AbstractDataFile, df, delim)
     units = to_origin(join(datafile.units, delim))
     metadata_line = replace(metadata_line, "minute"=>"minutes")
 
-    write_file(df, (units, file_line, folder_line, metadata_line), datafile.savename, delim)
+    write_file(df, (units, file_line, folder_line, metadata_line), filename, delim)
 end
 
 function write_file(df::AbstractDataFrame, extra, filename, delim)

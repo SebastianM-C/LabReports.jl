@@ -1,34 +1,37 @@
-struct GalvanostaticChargeDischarge{E} <: AbstractDataFile
+struct GalvanostaticChargeDischarge <: AbstractDataFile
     filename::String
     savename::String
     units::Vector{Unitful.Units}
     is_charging::Bool
     I::Quantity
     porosity::Quantity
-    exposure_time::E
+    exposure_time::Quantity
     round_idx::Int
     name_rules::NamedTuple
+    spec::String
 end
 
-function GalvanostaticChargeDischarge(filename, savename, units, name_rules)
-    is_charging = cd_status(filename, name_rules)
+function GalvanostaticChargeDischarge(filename, savename, units, spec, name_rules)
     round_idx = 1
-    name_rules = merge(name_rules, (I=name_rules.val,))
-    I = parse_quantity(filename, name_rules, :I)
-    porosity = parse_quantity(filename, name_rules, :porosity)
-    exposure_time = parse_quantity(filename, name_rules, :exposure_time)
+    spec = replace(spec, "{val}"=>"{I}")
+    m = match_spec(spec, filename, parse_rules)
+    isnothing(m) && @error "Specification string $spec did not match filename for $filename"
+
+    is_charging = cd_status(m)
+    I = parse_quantity(m, :I, name_rules)
+    porosity = parse_quantity(m, :porosity, name_rules, Int)
+    exposure_time = parse_quantity(m, :exposure_time, name_rules)
 
     GalvanostaticChargeDischarge(filename, savename, units, is_charging,
-        I, porosity, exposure_time, round_idx, name_rules)
+        I, porosity, exposure_time, round_idx, name_rules, spec)
 end
 
-function cd_status(filename, name_rules)
-    name_parts = split(basename(filename), "_")
-    if length(name_parts) < name_rules.cd_location
+function cd_status(match)
+    if isempty(match[:cd_type])
         return false
     end
-    cd_part = name_parts[name_rules.cd_location]
-    return cd_part == "C"
+    cd_part = match[:cd_type]
+    return uppercase(cd_part) == "C"
 end
 
 function DataFrames.rename!(df, ::GalvanostaticChargeDischarge)
@@ -47,17 +50,14 @@ end
 
 function name_with_CD(datafile)
     filename = datafile.savename
-    name_rules = datafile.name_rules
+    spec = datafile.spec
 
-    parts = rsplit(filename, '.', limit=2)
-    name_parts = split(basename(parts[1]), "_")
-    name_parts[name_rules.cd_location] = "CD"
-    name = joinpath(dirname(parts[1]), join(name_parts, "_"))
-
-    name * "." * parts[2]
+    m = match_spec(spec, filename, parse_rules)
+    idx = m.offsets[findfirst(i->i==m[:cd_type], m.captures)]
+    filename[1:idx-1] * "CD" * (idx == length(filename) ? "" : filename[idx+1:end])
 end
 
-function process_data(datafiles::Vector{GalvanostaticChargeDischarge}; insert_D, continue_col)
+function process_data(datafiles::Vector{GalvanostaticChargeDischarge}; insert_D, continue_col, filter=false)
     for data in datafiles
         df = read_file(data)
         pair_idx = find_pair(data, datafiles)
@@ -68,7 +68,11 @@ function process_data(datafiles::Vector{GalvanostaticChargeDischarge}; insert_D,
 
                 df_CD, df_D = postprocess(data, df, pair_df, insert_D, continue_col)
                 new_name = name_with_CD(data)
-                merged = GalvanostaticChargeDischarge(data.filename, new_name, data.units, data.name_rules)
+                merged = GalvanostaticChargeDischarge(data.filename, new_name, data.units, data.spec, data.name_rules)
+
+                if filter
+                    df_CD = df_CD[df_CD[!, :Potential] .< 0, :]
+                end
 
                 write_file(merged, df_CD, ';')
                 write_file(pair, df_D, ';')
@@ -78,42 +82,6 @@ function process_data(datafiles::Vector{GalvanostaticChargeDischarge}; insert_D,
             write_file(data, df, ';')
         end
     end
-
-    # done = Vector{Int}()
-    # for (i,f) in enumerate(data["C&D"])
-    #     if i in done
-    #         continue
-    #     else
-    #         push!(done, i)
-
-    #         df = read_file(f)
-
-    #         valid_idx = setdiff(axes(data["C&D"], 1), done)
-    #         pair_idx = find_pair(f, data["C&D"], endswith(f.filename, "_C") ? "_D" : "_C")
-
-    #         if isnothing(pair_idx)
-    #             if endswith(f.filename, "_D")
-    #                 pushfirst(df, insert_D)
-    #                 write_file(f, df, ';')
-    #             end
-    #             continue
-    #         end
-
-    #         f_pair = data["C&D"][pair_idx]
-    #         push!(done, pair_idx)
-
-    #         df_pair = read_file(f_pair)
-    #         df_C, df_D = endswith(f.filename, "_C") ? (df, df_pair) : (df_pair, df)
-    #         df_CD, df_D = postprocess(f, df_C, df_D, insert_D, continue_col)
-
-    #         new_name = add_CD(f.savename)
-    #         mergedf = DataFile{Val{Symbol("C&D")}}(f.filename, new_name, f.units,
-    #             f.legend_units, f.idx)
-
-    #         write_file(mergedf, df_CD, ';')
-    #         write_file(endswith(f.filename, "_D") ? f : f_pair, df_D, ';')
-    #     end
-    # end
 
     return nothing
 end
@@ -137,4 +105,41 @@ function postprocess(datafile::GalvanostaticChargeDischarge, df_C, df_D, value, 
     # Append DataFrames
     append!(df_C, df_D)
     return df_C, df_D_mod
+end
+
+function select_region(data::GalvanostaticChargeDischarge, ::Val{:first_cd})
+    df = read_file(data, processed_datarow, false)
+    V = df[!, "Potential"]
+    a_idx = findfirst(v->v>0, V)
+    b_idx = findfirst(v->v<0, OffsetArray(V[a_idx:end], a_idx:lastindex(V))) - 1
+
+    write_file(data, df[a_idx:b_idx,:], ';', replace(data.savename, ".dat"=>"_1.5.txt"))
+end
+
+function ir_drop(data::GalvanostaticChargeDischarge)
+    df = read_file(data, processed_datarow, false)
+
+    V = df[!, "Potential"]
+    V_max, idx = findmax(V)
+    ΔV = V_max - V[idx+1]
+    I = data.I
+
+    I, ΔV
+end
+
+function ir_drop(grouped, folder)
+    for datafiles in values(grouped)
+        I_ΔV = ir_drop.(datafiles)
+        I = [iv[1] for iv in I_ΔV]
+        ΔV = [iv[2] for iv in I_ΔV]
+
+        df = DataFrame(:I=>ustrip.(u"mA", I), :ΔV=>ΔV)
+
+        units = "mA,V"
+        datafile = datafiles[1]
+        porosity = comment_line(datafile, foldervalue, ",", 2) * ","
+        exposure_time = replace(comment_line(datafile, metadata, ",", 2), "minute"=>"minutes")
+        filename = joinpath(folder, string(ustrip(datafile.porosity)) * "_ir_drop.csv")
+        write_file(df, (units, porosity, exposure_time), filename, ",")
+    end
 end

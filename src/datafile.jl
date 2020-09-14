@@ -1,16 +1,8 @@
-struct DataFile{T}
-    filename::String
-    savename::String
-    units::Vector{String}
-    legend_units::String
-    idx::Int
-end
-
 abstract type AbstractDataFile end
 
-function datafile(filename::String, ext, delim, extra_rules)
+function datafile(filename::String, spec, ext, delim, extra_rules)
     if !endswith(filename, ext)
-        savename = joinpath(dirname(filename), basename(filename) * ext)
+        savename = filename * ext
         units = extract_units(filename, delim)
     else
         savename = filename
@@ -36,11 +28,9 @@ function datafile(filename::String, ext, delim, extra_rules)
         name_rules = @set name_rules.replace_str = merge(name_contents.replace_str, extra_rules.replace)
     end
 
-    name = split(basename(filename), name_rules.separator)
-    type = name[name_rules.type]
-    T = type_rules[type]
+    T = filetype(filename, spec, parse_rules, type_rules)
 
-    T(filename, savename, units, name_rules)
+    T(filename, savename, units, spec, name_rules)
 end
 
 function extract_units(filename, delim)

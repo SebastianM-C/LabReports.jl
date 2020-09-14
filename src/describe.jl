@@ -1,18 +1,32 @@
-function find_files(folder, ext=".dat", delim=';';
+function find_files(folder, spec, ext=".dat";
+                    delim=';',
                     exclude_with=[ext],
                     select_with="",
                     exclude_dirs=[],
                     extra_rules=(type=Dict(), name=NamedTuple()))
-    dirs = setdiff(dirs_in_folder(folder, true), exclude_dirs)
+    # dirs = setdiff(dirs_in_folder(folder, true), exclude_dirs)
     data = Vector{AbstractDataFile}()
 
-    for dir in dirs
-        files = readdir(dir, join=true)
-        files = files[isfile.(files)]
+    # for dir in dirs
+    #     files = readdir(dir, join=true)
+    #     files = files[isfile.(files)]
+
+    #     for file in files
+    #         if occursin(select_with, file) && !exclude(file, exclude_with)
+    #             push!(data, datafile(file, ext, delim, extra_rules))
+    #         end
+    #     end
+    # end
+
+    for (root, dirs, files) in walkdir(folder)
+        if basename(root) ∈ exclude_dirs
+            continue
+        end
 
         for file in files
             if occursin(select_with, file) && !exclude(file, exclude_with)
-                push!(data, datafile(file, ext, delim, extra_rules))
+                full_path = joinpath(root, file)
+                push!(data, datafile(full_path, spec, ext, delim, extra_rules))
             end
         end
     end
@@ -42,7 +56,7 @@ function filevalue(filename, name_rules, key)
     if haskey(name_rules, :processed_ext)
         filename = replace(filename, name_rules.processed_ext=>"")
     end
-    fn = basename(filename)
+    fn = splitpath(filename)[]
     parts = split(fn, name_rules.separator)
     val = parts[getproperty(name_rules, key)]
 
@@ -63,29 +77,7 @@ filetype(::CiclycVoltammetry) = "CV"
 filetype(::GalvanostaticChargeDischarge) = "C&D"
 filetype(::ElectrochemicalImpedanceSpectroscopy) = "EIS"
 
-function metadata(datafile)
-    if hasproperty(datafile, :exposure_time)
-        datafile.exposure_time
-    else
-        missing
-    end
-end
-
-const type_detection = Dict(
-    "CV"  => CiclycVoltammetry,
-    "C&D" => GalvanostaticChargeDischarge,
-    "EIS" => ElectrochemicalImpedanceSpectroscopy
-)
-
-const name_contents = (
-    separator = '_',
-    type = 2,
-    val = 3,
-    cd_location = 4,
-    replace_str = Dict(' '=>""),
-    functions = (I = filevalue, scan_rate = filevalue, porosity = (f,r,k)->foldervalue(f)),
-    implicit_units = (I = u"A", scan_rate = u"mV/s", porosity = u"mA/cm^2", exposure_time = u"minute"),
-)
+metadata(datafile) = datafile.exposure_time
 
 function dirs_in_folder(folder, keep_root)
     contents = readdir(folder, join=true)
@@ -93,30 +85,15 @@ function dirs_in_folder(folder, keep_root)
     return keep_root ? dirs : basename.(dirs)
 end
 
-function files_with_val(datafiles, val, ext="")
-    files = DataFile[]
+function files_with_val(datafiles, val)
+    files = AbstractDataFile[]
     for file in datafiles
-        if filevalue(file, ext) == val
+        if filevalue(file) == val
             push!(files, file)
         end
     end
 
     return files
-end
-
-function parse_quantity(filename, rules, key)
-    if hasproperty(rules.functions, key)
-        f = getproperty(rules.functions, key)
-    else
-        return missing
-    end
-
-    unit = getproperty(rules.implicit_units, key)
-    if !isnothing(unit)
-        parse(Float64, f(filename, rules, key)) * unit
-    else
-        uparse(f(filename, rules, key))
-    end
 end
 
 function common_values(data)
